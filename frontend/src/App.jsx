@@ -9,7 +9,7 @@ import NotFound from './pages/NotFound'
 
 const App = () => {
   return (
-    <div>
+    <>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<Auth />} />
@@ -18,7 +18,7 @@ const App = () => {
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </div>
+    </>
   )
 }
 
