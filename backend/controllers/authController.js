@@ -194,3 +194,41 @@ export const isAuthenticated = async (req, res) => {
         return res.json({success: false, message: error.message});
     }
 }
+
+// Send Password reset OTP to user email
+
+export const sendResetOtp = async (req, res) => {
+    const {email} = req.body;
+
+    if(!email) {
+        return res.json({success: false, messge: "Email is required"})
+    }
+
+    try {
+        const user = await userModel.findOne({email});
+        if(!user) {
+            return res.json({success: false, message: "User not found"});
+        }
+
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
+        
+        user.resetOtp = otp;
+        user.resetOtpExpireAt = Date.now() + 15 * 60 * 1000; // Otp Valied for 15 Minutes
+
+        await user.save();
+
+        const mailOption = {
+            from: process.env.SENDER_EMAIL,
+            to: user.email,
+            subject: 'Quantrox – Password Reset OTP',
+            text: `Your OTP is ${otp}. It is valid for 15 minutes. Please enter this OTP in the app to reset your password.`
+        }
+
+        await transporter.sendMail(mailOption);
+
+        return res.json({success: true, message: "OTP sent to your email address"});
+
+    } catch (error) {
+        return res.json({success: false, message: error.message});
+    }
+}
