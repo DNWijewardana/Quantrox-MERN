@@ -111,3 +111,40 @@ export const logout = async (req, res) => {
     }
 }
 
+// User Email Verification using OTP
+
+export const sendVerifyOtp = async (req, res) => {
+    try {
+        const {userId} = req.body;
+
+        const user = await userModel.findById(userId);
+
+        if(user.isAccountVerified){
+            return res.json({success: false, message: "Account is already verified"});
+        }
+
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
+        
+        user.verifyOtp = otp;
+        user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000; // Otp Valied for 24 Hours
+
+        await user.save();
+
+        const mailOption = {
+            from: process.env.SENDER_EMAIL,
+            to: user.email,
+            subject: 'Quantrox – Account Verification OTP',
+            text: `Your OTP is ${otp}. It is valid for 24 hours. Please enter this OTP in the app to verify your account.`
+        }
+
+        await transporter.sendMail(mailOption);
+
+        return res.json({success: true, messsage: 'OTP sent to your email address'});
+
+
+    } catch (error) {
+        res.json({success: false, message: error.message})
+    }
+}
+
+
