@@ -2,10 +2,125 @@
 
 /* @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
-body {
-  font-family: 'Inter', sans-serif;
+
+/* ========================
+   ROOT VARIABLES (LIGHT)
+======================== */
+:root {
+  --background: 210 20% 98%;
+  --foreground: 215 25% 15%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 215 25% 15%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 215 25% 15%;
+
+  --primary: 213 50% 23%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 215 20% 94%;
+  --secondary-foreground: 215 25% 25%;
+
+  --muted: 215 15% 92%;
+  --muted-foreground: 215 15% 45%;
+
+  --accent: 38 92% 50%;
+  --accent-foreground: 215 25% 15%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 215 20% 88%;
+  --input: 215 20% 88%;
+  --ring: 213 50% 23%;
+
+  --radius: 0.75rem;
+
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+
+  --warning: 38 92% 50%;
+  --warning-foreground: 215 25% 15%;
+
+  --info: 199 89% 48%;
+  --info-foreground: 0 0% 100%;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'DM Sans', sans-serif;
-} */
+/* ========================
+   DARK MODE
+======================== */
+.dark {
+  --background: 215 25% 9%;
+  --foreground: 210 40% 95%;
+
+  --card: 215 25% 12%;
+  --card-foreground: 210 40% 95%;
+
+  --popover: 215 25% 12%;
+  --popover-foreground: 210 40% 95%;
+
+  --primary: 38 92% 50%;
+  --primary-foreground: 215 25% 12%;
+
+  --secondary: 215 20% 18%;
+  --secondary-foreground: 210 40% 90%;
+
+  --muted: 215 20% 18%;
+  --muted-foreground: 215 15% 55%;
+
+  --accent: 213 50% 35%;
+  --accent-foreground: 210 40% 95%;
+
+  --border: 215 20% 20%;
+  --input: 215 20% 20%;
+  --ring: 38 92% 50%;
+}
+
+/* ========================
+   BASE STYLES
+======================== */
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* ========================
+   UTILITIES (IMPORTANT)
+======================== */
+@layer utilities {
+
+  .text-foreground {
+    color: hsl(var(--foreground));
+  }
+
+  .text-muted-foreground {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .bg-background {
+    background-color: hsl(var(--background));
+  }
+
+  .bg-primary {
+    background-color: hsl(var(--primary));
+  }
+
+  .bg-accent {
+    background-color: hsl(var(--accent));
+  }
+
+  .border-color {
+    border-color: hsl(var(--border));
+  }
+
+  /* Hover */
+  .hover\:text-foreground:hover {
+    color: hsl(var(--foreground));
+  }
+
+  /* Smooth transition */
+  .transition-smooth {
+    transition: all 0.3s ease-in-out;
+  }
+}
