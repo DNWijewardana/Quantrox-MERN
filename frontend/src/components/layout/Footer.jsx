@@ -31,7 +31,7 @@ const Footer = () => {
 
   return (
     <div className="px-6 md:px-16 lg:px-24 xl:px-32">
-      <div className="flex flex-col md:flex-row items-start justify-between gap-10 py-10 border-b border-gray-500/30 text-gray-500">
+      <div className="container mx-auto flex flex-col md:flex-row items-start justify-between gap-10 py-10 border-b border-gray-500/30 text-gray-500">
         
         {/* LEFT SIDE */}
         <div>
@@ -59,7 +59,7 @@ const Footer = () => {
                   <li key={i}>
                     <Link
                       to={link.path}
-                      className="text-muted-foreground hover:text-foreground transition-colors duration-300"
+                      className="text-[hsl(var(muted-foreground))] hover:[hsl(var(text-foreground))] transition-colors duration-300"
                     >
                       {link.name}
                     </Link>
