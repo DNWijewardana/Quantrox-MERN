@@ -10,8 +10,8 @@ const CTASection = () => {
       <div className="absolute inset-0 bg-grid opacity-30" />
       
       {/* Glowing orbs */}
-      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-64 h-64 bg-accent/30 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-48 h-48 bg-primary/40 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-64 h-64 bg-[hsl(var(--accent))]/30 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-48 h-48 bg-[hsl(var(--primary))]/40 rounded-full blur-3xl" />
 
       <div className="container mx-auto relative z-10">
         <div className="max-w-3xl mx-auto text-center">

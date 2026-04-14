@@ -39,10 +39,10 @@ export function HowItWorksSection() {
         
         {/* Heading */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-[hsl(var(--foreground))] mb-4">
             How It Works
           </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg text-[hsl(var(--muted-foreground))]">
             From floor plan to complete estimate in just four simple steps.
           </p>
         </div>
@@ -50,7 +50,7 @@ export function HowItWorksSection() {
         <div className="relative">
           
           {/* Connection Line (Desktop only) */}
-          <div className="hidden lg:block absolute top-24 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-accent via-primary to-accent" />
+          {/* <div className="hidden lg:block absolute top-24 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-[hsl(var(--accent))] via-[hsl(var(--primary))] to-[hsl(var(--accent))] z-0"/> */}
 
           {/* Steps */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -58,25 +58,25 @@ export function HowItWorksSection() {
               <div key={step.number} className="relative">
                 
                 {/* Card */}
-                <div className="relative z-10 p-6 rounded-xl bg-card border border-border shadow-card hover:shadow-lg transition-all duration-300 text-center group">
+                <div className="relative z-20 p-6 rounded-xl bg-card border border-border shadow-card hover:shadow-lg transition-all duration-300 text-center group">
                   
                   {/* Step Number */}
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-accent text-accent-foreground font-bold text-sm flex items-center justify-center shadow-md">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] font-bold text-sm flex items-center justify-center shadow-md">
                     {index + 1}
                   </div>
 
                   {/* Icon */}
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mx-auto mb-4 group-hover:bg-accent/20 group-hover:text-accent transition-colors">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] mx-auto mb-4 group-hover:bg-[hsl(var(--accent))]/20 group-hover:text-[hsl(var(--accent))] transition-colors">
                     {step.icon}
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
+                  <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-2">
                     {step.title}
                   </h3>
 
                   {/* Description */}
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-[hsl(var(--muted-foreground))]">
                     {step.description}
                   </p>
 

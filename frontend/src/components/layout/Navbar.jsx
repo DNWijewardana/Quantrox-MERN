@@ -18,7 +18,7 @@ const Navbar = () => {
   const user = null;
   
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 md:px-16 lg:px-24 xl:px-32">
+    <header className="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))]/40 bg-[hsl(var(--background))]/95 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/60 px-6 md:px-16 lg:px-24 xl:px-32">
       <div className="container mx-auto flex h-16 items-center justify-between">
         
         {/* Logo */}
@@ -26,9 +26,6 @@ const Navbar = () => {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-primary shadow-md group-hover:shadow-lg transition-shadow">
             <Building2 className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold text-foreground">
-            Build<span className="text-accent">Estimate</span>
-          </span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -39,8 +36,8 @@ const Navbar = () => {
               to={link.href}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 location.pathname === link.href
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  ? "bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]"
+                  : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--secondary))]/50"
               }`}
             >
               {link.label}
@@ -52,12 +49,12 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <>
-              <span className="text-sm text-muted-foreground flex items-center gap-1">
+              <span className="text-sm text-[hsl(var(--muted-foreground))] flex items-center gap-1">
                 <User className="h-4 w-4" />
                 {user.email}
               </span>
 
-              <button className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm hover:bg-secondary transition">
+              <button className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm hover:bg-[hsl(var(--accent))] transition">
                 <LogOut className="h-4 w-4" />
                 Sign Out
               </button>
@@ -65,14 +62,14 @@ const Navbar = () => {
           ) : (
             <>
               <button
-                className="px-3 py-2 rounded-lg text-sm hover:bg-secondary transition"
+                className="px-3 py-2 rounded-lg text-sm hover:bg-[hsl(var(--accent))] transition"
                 onClick={() => navigate("/login")}
               >
                 Sign In
               </button>
 
               <button
-                className="px-4 py-2 rounded-lg text-sm bg-primary text-white hover:bg-primary/90 transition"
+                className="px-4 py-2 rounded-lg text-sm bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90 transition"
                 onClick={() => navigate("/login")}
               >
                 Get Started
@@ -83,7 +80,7 @@ const Navbar = () => {
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden p-2 rounded-lg hover:bg-secondary"
+          className="md:hidden p-2 rounded-lg hover:bg-[hsl(var(--secondary))] transition"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
           {isMenuOpen ? (
@@ -96,7 +93,7 @@ const Navbar = () => {
 
       {/* Mobile Navigation */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background animate-slide-up">
+        <div className="md:hidden border-t border-[hsl(var(--border))] bg-[hsl(var(--background))] animate-slide-up">
           <nav className="container py-4 flex flex-col gap-2">
             
             {navLinks.map((link) => (
@@ -105,8 +102,8 @@ const Navbar = () => {
                 to={link.href}
                 className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                   location.pathname === link.href
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                    ? "bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]"
+                    : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--secondary))]/50"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -115,14 +112,14 @@ const Navbar = () => {
             ))}
 
             {/* Mobile Buttons */}
-            <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
+            <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-[hsl(var(--border))]">
               {user ? (
                 <>
-                  <span className="px-4 text-sm text-muted-foreground">
+                  <span className="px-4 text-sm text-[hsl(var(--muted-foreground))]">
                     {user.email}
                   </span>
 
-                  <button className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-secondary rounded-lg">
+                  <button className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-[hsl(var(--secondary))] rounded-lg">
                     <LogOut className="h-4 w-4" />
                     Sign Out
                   </button>
@@ -130,7 +127,7 @@ const Navbar = () => {
               ) : (
                 <>
                   <button
-                    className="px-4 py-3 text-sm hover:bg-secondary rounded-lg text-left"
+                    className="px-4 py-3 text-sm hover:bg-[hsl(var(--secondary))] rounded-lg text-left"
                     onClick={() => {
                       navigate("/login");
                       setIsMenuOpen(false);
@@ -140,7 +137,7 @@ const Navbar = () => {
                   </button>
 
                   <button
-                    className="px-4 py-3 text-sm bg-primary text-white rounded-lg"
+                    className="px-4 py-3 text-sm bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90 rounded-lg"
                     onClick={() => {
                       navigate("/login");
                       setIsMenuOpen(false);

@@ -10,8 +10,8 @@ const HeroSection = () => {
       <div className="absolute inset-0 bg-grid opacity-50" />
 
       {/* Floating Elements */}
-      <div className="absolute top-20 left-10 w-72 h-72 bg-accent/20 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/30 rounded-full blur-3xl animate-float delay-300" />
+      <div className="absolute top-20 left-10 w-72 h-72 bg-[hsl(var(--accent))]/20 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-[hsl(var(--primary))]/30 rounded-full blur-3xl animate-float delay-300" />
 
       <div className="container mx-auto relative z-10 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -20,7 +20,7 @@ const HeroSection = () => {
           <div className="space-y-8 animate-slide-up">
 
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-[hsl(var(--accent))] animate-pulse" />
               <span className="text-sm text-white/90">
                 AI-Powered Construction Estimation
               </span>
@@ -28,7 +28,7 @@ const HeroSection = () => {
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
               Transform Floor Plans into{" "}
-              <span className="text-accent">Accurate Estimates</span>
+              <span className="text-[hsl(var(--accent))]">Accurate Estimates</span>
             </h1>
 
             <p className="text-lg text-white/80 max-w-xl">
@@ -108,7 +108,7 @@ function FeatureCard({ icon, title, description, delay }) {
   return (
     <div className={`glass-dark rounded-xl p-6 hover:bg-white/15 transition-all duration-300 hover:scale-[1.02] animate-slide-up ${delay}`}>
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent/20 text-accent">
+        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))]">
           {icon}
         </div>
         <div>
