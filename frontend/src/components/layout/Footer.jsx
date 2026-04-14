@@ -40,7 +40,7 @@ const Footer = () => {
             src="Mini-Logo.png"
             alt="logo"
           />
-          <p className="max-w-[410px] mt-6">
+          <p className="max-w-[410px] mt-6 text-[hsl(var(--muted-foreground))]">
             AI-powered construction estimation for residential projects. Fast,
             accurate, and affordable.
           </p>
@@ -50,7 +50,7 @@ const Footer = () => {
         <div className="flex flex-wrap justify-between w-full md:w-[45%] gap-5">
           {linkSections.map((section, index) => (
             <div key={index}>
-              <h3 className="font-semibold text-base text-gray-900 md:mb-5 mb-2">
+              <h3 className="font-semibold text-base text-[hsl(var(--foreground))] md:mb-5 mb-2">
                 {section.title}
               </h3>
 
@@ -59,7 +59,7 @@ const Footer = () => {
                   <li key={i}>
                     <Link
                       to={link.path}
-                      className="text-[hsl(var(muted-foreground))] hover:[hsl(var(text-foreground))] transition-colors duration-300"
+                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors duration-300"
                     >
                       {link.name}
                     </Link>

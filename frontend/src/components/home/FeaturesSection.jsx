@@ -67,10 +67,10 @@ export function FeaturesSection() {
       <div className="container mx-auto">
         {/* Heading */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-[hsl(var(--foreground))] mb-4">
             Powerful Features for Accurate Estimation
           </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg text-[hsl(var(--muted-foreground))]">
             Our AI system combines computer vision with construction engineering formulas
             to deliver reliable quantity take-offs and cost estimates.
           </p>
@@ -81,18 +81,18 @@ export function FeaturesSection() {
           {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="group p-6 rounded-xl bg-card border border-border hover:border-accent/50 shadow-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+              className="group p-6 rounded-xl bg-card border border-border hover:border-[hsl(var(--accent))]/50 shadow-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-accent/20 group-hover:text-accent transition-colors mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] group-hover:bg-[hsl(var(--accent))]/20 group-hover:text-[hsl(var(--accent))] transition-colors mb-4">
                 {feature.icon}
               </div>
 
-              <h3 className="font-semibold text-foreground mb-2">
+              <h3 className="font-semibold text-[hsl(var(--foreground))] mb-2">
                 {feature.title}
               </h3>
 
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-[hsl(var(--muted-foreground))]">
                 {feature.description}
               </p>
             </div>
