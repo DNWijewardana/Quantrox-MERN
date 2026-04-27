@@ -51,17 +51,17 @@ const Dashboard = () => {
   return (
     <>
     <Navbar />
-    <div className="min-h-screen flex flex-col bg-background px-6 md:px-16 lg:px-24 xl:px-32">
+    <div className="min-h-screen flex flex-col bg-[hsl(var(--background))] px-6 md:px-16 lg:px-24 xl:px-32">
       <main className="flex-1 py-8">
         <div className="container mx-auto">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
-              <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground">
+              <h1 className="font-display text-2xl md:text-3xl font-bold text-[hsl(var(--foreground))]">
                 Estimation Results
               </h1>
-              <p className="text-muted-foreground mt-1">
-                Floor Plan: residential_plan_v2.pdf • Analyzed on Jan 29, 2024
+              <p className="text-[hsl(var(--muted-foreground))] mt-1">
+                Floor Plan: residential_plan_v2.jpg • Analyzed on May 15, 2026
               </p>
             </div>
             <div className="flex gap-3">
@@ -111,16 +111,16 @@ const Dashboard = () => {
 
           {/* Tabs */}
           <Tabs defaultValue="materials" className="space-y-6">
-            <TabsList className="bg-secondary/50 p-1">
-              <TabsTrigger value="materials" className="data-[state=active]:bg-background">
+            <TabsList className="bg-[hsl(var(--secondary))]/50 p-1">
+              <TabsTrigger value="materials" className="data-[state=active]:bg-[hsl(var(--background))]">
                 <Package className="h-4 w-4 mr-2" />
                 Materials
               </TabsTrigger>
-              <TabsTrigger value="labour" className="data-[state=active]:bg-background">
+              <TabsTrigger value="labour" className="data-[state=active]:bg-[hsl(var(--background))]">
                 <Users className="h-4 w-4 mr-2" />
                 Labour
               </TabsTrigger>
-              <TabsTrigger value="rooms" className="data-[state=active]:bg-background">
+              <TabsTrigger value="rooms" className="data-[state=active]:bg-[hsl(var(--background))]">
                 <Layers className="h-4 w-4 mr-2" />
                 Rooms
               </TabsTrigger>
@@ -130,7 +130,7 @@ const Dashboard = () => {
               <Card className="shadow-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <Package className="h-5 w-5 text-accent" />
+                    <Package className="h-5 w-5 text-[hsl(var(--accent))]" />
                     Material Quantities
                   </CardTitle>
                 </CardHeader>
@@ -138,29 +138,29 @@ const Dashboard = () => {
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-border">
-                          <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Item</th>
-                          <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Quantity</th>
-                          <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Unit</th>
-                          <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Rate (LKR)</th>
-                          <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Total (LKR)</th>
+                        <tr className="border-b border-[hsl(var(--border))]">
+                          <th className="text-left py-3 px-4 text-sm font-medium text-[hsl(var(--muted-foreground))]">Item</th>
+                          <th className="text-right py-3 px-4 text-sm font-medium text-[hsl(var(--muted-foreground))]">Quantity</th>
+                          <th className="text-right py-3 px-4 text-sm font-medium text-[hsl(var(--muted-foreground))]">Unit</th>
+                          <th className="text-right py-3 px-4 text-sm font-medium text-[hsl(var(--muted-foreground))]">Rate (LKR)</th>
+                          <th className="text-right py-3 px-4 text-sm font-medium text-[hsl(var(--muted-foreground))]">Total (LKR)</th>
                         </tr>
                       </thead>
                       <tbody>
                         {materialData.map((item, index) => (
-                          <tr key={index} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
-                            <td className="py-3 px-4 text-sm font-medium text-foreground">{item.item}</td>
-                            <td className="py-3 px-4 text-sm text-right text-foreground">{item.quantity}</td>
-                            <td className="py-3 px-4 text-sm text-right text-muted-foreground">{item.unit}</td>
-                            <td className="py-3 px-4 text-sm text-right text-muted-foreground">{item.rate.toLocaleString()}</td>
-                            <td className="py-3 px-4 text-sm text-right font-medium text-foreground">{item.total.toLocaleString()}</td>
+                          <tr key={index} className="border-b border-[hsl(var(--border))]/50 hover:bg-[hsl(var(--secondary))]/30 transition-colors">
+                            <td className="py-3 px-4 text-sm font-medium text-[hsl(var(--foreground))]">{item.item}</td>
+                            <td className="py-3 px-4 text-sm text-right text-[hsl(var(--foreground))]">{item.quantity}</td>
+                            <td className="py-3 px-4 text-sm text-right text-[hsl(var(--muted-foreground))]">{item.unit}</td>
+                            <td className="py-3 px-4 text-sm text-right text-[hsl(var(--muted-foreground))]">{item.rate.toLocaleString()}</td>
+                            <td className="py-3 px-4 text-sm text-right font-medium text-[hsl(var(--foreground))]">{item.total.toLocaleString()}</td>
                           </tr>
                         ))}
                       </tbody>
                       <tfoot>
-                        <tr className="bg-secondary/50">
-                          <td colSpan={4} className="py-3 px-4 text-sm font-semibold text-foreground">Total Material Cost</td>
-                          <td className="py-3 px-4 text-sm text-right font-bold text-foreground">LKR {totalMaterialCost.toLocaleString()}</td>
+                        <tr className="bg-[hsl(var(--secondary))]/50">
+                          <td colSpan={4} className="py-3 px-4 text-sm font-semibold text-[hsl(var(--foreground))]">Total Material Cost</td>
+                          <td className="py-3 px-4 text-sm text-right font-bold text-[hsl(var(--foreground))]">LKR {totalMaterialCost.toLocaleString()}</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -173,7 +173,7 @@ const Dashboard = () => {
               <Card className="shadow-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <Users className="h-5 w-5 text-accent" />
+                    <Users className="h-5 w-5 text-[hsl(var(--accent))]" />
                     Labour Estimation
                   </CardTitle>
                 </CardHeader>
@@ -181,29 +181,29 @@ const Dashboard = () => {
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-border">
-                          <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Task</th>
-                          <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Days</th>
-                          <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Workers</th>
-                          <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Rate/Day (LKR)</th>
-                          <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Total (LKR)</th>
+                        <tr className="border-b border-[hsl(var(--border))]/50">
+                          <th className="text-left py-3 px-4 text-sm font-medium text-[hsl(var(--muted-foreground))]">Task</th>
+                          <th className="text-right py-3 px-4 text-sm font-medium text-[hsl(var(--muted-foreground))]">Days</th>
+                          <th className="text-right py-3 px-4 text-sm font-medium text-[hsl(var(--muted-foreground))]">Workers</th>
+                          <th className="text-right py-3 px-4 text-sm font-medium text-[hsl(var(--muted-foreground))]">Rate/Day (LKR)</th>
+                          <th className="text-right py-3 px-4 text-sm font-medium text-[hsl(var(--muted-foreground))]">Total (LKR)</th>
                         </tr>
                       </thead>
                       <tbody>
                         {labourData.map((item, index) => (
-                          <tr key={index} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
-                            <td className="py-3 px-4 text-sm font-medium text-foreground">{item.task}</td>
-                            <td className="py-3 px-4 text-sm text-right text-foreground">{item.days}</td>
-                            <td className="py-3 px-4 text-sm text-right text-muted-foreground">{item.workers}</td>
-                            <td className="py-3 px-4 text-sm text-right text-muted-foreground">{item.rate.toLocaleString()}</td>
-                            <td className="py-3 px-4 text-sm text-right font-medium text-foreground">{item.total.toLocaleString()}</td>
+                          <tr key={index} className="border-b border-[hsl(var(--border))]/50 hover:bg-[hsl(var(--secondary))]/30 transition-colors">
+                            <td className="py-3 px-4 text-sm font-medium text-[hsl(var(--foreground))]">{item.task}</td>
+                            <td className="py-3 px-4 text-sm text-right text-[hsl(var(--foreground))]">{item.days}</td>
+                            <td className="py-3 px-4 text-sm text-right text-[hsl(var(--muted-foreground))]">{item.workers}</td>
+                            <td className="py-3 px-4 text-sm text-right text-[hsl(var(--muted-foreground))]">{item.rate.toLocaleString()}</td>
+                            <td className="py-3 px-4 text-sm text-right font-medium text-[hsl(var(--foreground))]">{item.total.toLocaleString()}</td>
                           </tr>
                         ))}
                       </tbody>
                       <tfoot>
-                        <tr className="bg-secondary/50">
-                          <td colSpan={4} className="py-3 px-4 text-sm font-semibold text-foreground">Total Labour Cost</td>
-                          <td className="py-3 px-4 text-sm text-right font-bold text-foreground">LKR {totalLabourCost.toLocaleString()}</td>
+                        <tr className="bg-[hsl(var(--secondary))]/50">
+                          <td colSpan={4} className="py-3 px-4 text-sm font-semibold text-[hsl(var(--foreground))]">Total Labour Cost</td>
+                          <td className="py-3 px-4 text-sm text-right font-bold text-[hsl(var(--foreground))]">LKR {totalLabourCost.toLocaleString()}</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -216,7 +216,7 @@ const Dashboard = () => {
               <Card className="shadow-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <Layers className="h-5 w-5 text-accent" />
+                    <Layers className="h-5 w-5 text-[hsl(var(--accent))]" />
                     Detected Rooms
                   </CardTitle>
                 </CardHeader>
@@ -225,33 +225,33 @@ const Dashboard = () => {
                     {roomData.map((room, index) => (
                       <div
                         key={index}
-                        className="p-4 rounded-lg border border-border bg-secondary/20 hover:bg-secondary/40 transition-colors"
+                        className="p-4 rounded-lg border border-[hsl(var(--border))]/50 bg-[hsl(var(--secondary))]/20 hover:bg-[hsl(var(--secondary))]/40 transition-colors"
                       >
-                        <h4 className="font-semibold text-foreground mb-3">{room.name}</h4>
+                        <h4 className="font-semibold text-[hsl(var(--foreground))] mb-3">{room.name}</h4>
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <div>
-                            <p className="text-muted-foreground">Area</p>
-                            <p className="font-medium text-foreground">{room.area} m²</p>
+                            <p className="text-[hsl(var(--muted-foreground))]">Area</p>
+                            <p className="font-medium text-[hsl(var(--foreground))]">{room.area} m²</p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Perimeter</p>
-                            <p className="font-medium text-foreground">{room.perimeter} m</p>
+                            <p className="text-[hsl(var(--muted-foreground))]">Perimeter</p>
+                            <p className="font-medium text-[hsl(var(--foreground))]">{room.perimeter} m</p>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-6 p-4 rounded-lg bg-accent/10 border border-accent/20">
+                  <div className="mt-6 p-4 rounded-lg bg-[hsl(var(--accent))]/10 border border-[hsl(var(--accent))]/20">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Floor Area</p>
-                        <p className="text-2xl font-bold text-foreground">
+                        <p className="text-sm text-[hsl(var(--muted-foreground))]">Total Floor Area</p>
+                        <p className="text-2xl font-bold text-[hsl(var(--foreground))]">
                           {roomData.reduce((sum, room) => sum + room.area, 0).toFixed(1)} m²
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Wall Length</p>
-                        <p className="text-2xl font-bold text-foreground">
+                        <p className="text-sm text-[hsl(var(--muted-foreground))]">Total Wall Length</p>
+                        <p className="text-2xl font-bold text-[hsl(var(--foreground))]">
                           {(roomData.reduce((sum, room) => sum + room.perimeter, 0) / 2).toFixed(1)} m
                         </p>
                       </div>
@@ -275,13 +275,13 @@ function SummaryCard({ icon, label, value, change, positive }) {
       <CardContent className="p-5">
         <div className="flex items-center justify-between mb-3">
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]">
             {icon}
           </div>
 
           <div
             className={`flex items-center gap-1 text-xs font-medium ${
-              positive ? "text-success" : "text-muted-foreground"
+              positive ? "text-[hsl(var(--success))]" : "text-[hsl(var(--muted-foreground))]"
             }`}
           >
             {positive && <TrendingUp className="h-3 w-3" />}
@@ -290,8 +290,8 @@ function SummaryCard({ icon, label, value, change, positive }) {
 
         </div>
 
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
+        <p className="text-sm text-[hsl(var(--muted-foreground))]">{label}</p>
+        <p className="text-2xl font-bold text-[hsl(var(--foreground))] mt-1">{value}</p>
       </CardContent>
     </Card>
   );
