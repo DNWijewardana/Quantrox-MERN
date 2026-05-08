@@ -8,6 +8,7 @@ import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 import Scale from './pages/Scale'
 import Analysis from './pages/Analysis'
+import Editor from './pages/Editor'
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
         <Route path="/settings" element={<Settings />} />
         <Route path="/scale" element={<Scale />} />
         <Route path="/analysis" element={<Analysis />} />
+        <Route path="/editor" element={<Editor />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
