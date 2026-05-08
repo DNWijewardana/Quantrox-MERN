@@ -4,6 +4,7 @@ import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
 import { useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../../lib/axios";
+import { Button } from "../../components/ui/button";
 
 const cn = (...classes) => classes.filter(Boolean).join(" ");
 
@@ -14,7 +15,7 @@ const Input = forwardRef(({ className, type, ...props }, ref) => {
       type={type}
       ref={ref}
       className={cn(
-        "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50",
+        "flex h-10 w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50",
         className
       )}
       {...props}
@@ -96,7 +97,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-[hsl(var(--background))]">
       <Navbar />
 
       <main className="flex-1 flex items-center justify-center py-12">
@@ -108,11 +109,11 @@ const Login = () => {
               <Building2 className="h-7 w-7 text-white" />
             </div>
 
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">
               {isLogin ? "Welcome Back" : "Create Account"}
             </h1>
 
-            <p className="text-muted-foreground text-sm mt-1">
+            <p className="text-[hsl(var(--muted-foreground))] text-sm mt-1">
               {isLogin
                 ? "Sign in to access your projects"
                 : "Start estimating smarter today"}
@@ -122,7 +123,7 @@ const Login = () => {
           {/* Form */}
           <form
             onSubmit={handleSubmit}
-            className="space-y-4 p-6 rounded-xl bg-card border border-border shadow-card"
+            className="space-y-4 p-6 rounded-xl bg-[hsl(var(--card))] border border-[hsl(var(--border))] shadow-card"
           >
 
             {!isLogin && (
@@ -158,8 +159,8 @@ const Login = () => {
 
                 {isLogin && (
                   <Link
-                    to="/reset-password"
-                    className="text-xs text-accent hover:underline"
+                    to="/forgot-password"
+                    className="text-xs text-[hsl(var(--accent))] hover:underline"
                   >
                     Forgot password?
                   </Link>
@@ -178,27 +179,27 @@ const Login = () => {
             </div>
 
             {/* INLINE BUTTON */}
-            <button
+            <Button
+              className="w-full h-10 rounded-md bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] font-medium hover:bg-[hsl(var(--primary))]/90 transition disabled:opacity-50"
               type="submit"
               disabled={loading}
-              className="w-full h-10 rounded-md bg-primary text-white font-medium hover:bg-primary/90 transition disabled:opacity-50"
             >
               {loading
                 ? "Please wait..."
                 : isLogin
                 ? "Sign In"
                 : "Create Account"}
-            </button>
+            </Button>
 
           </form>
 
           {/* Switch */}
-          <p className="text-center text-sm text-muted-foreground mt-4">
+          <p className="text-center text-sm text-[hsl(var(--muted-foreground))] mt-4">
             {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-accent font-medium hover:underline"
+              className="text-[hsl(var(--accent))] font-medium hover:underline"
             >
               {isLogin ? "Sign up" : "Sign in"}
             </button>

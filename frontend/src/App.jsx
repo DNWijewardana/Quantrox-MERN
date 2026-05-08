@@ -6,6 +6,7 @@ import Upload from './pages/Upload'
 import Dashboard from './pages/Dashboard'
 import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
+import Scale from './pages/Scale'
 
 const App = () => {
   return (
@@ -16,6 +17,7 @@ const App = () => {
         <Route path="/upload" element={<Upload />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/scale" element={<Scale />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
