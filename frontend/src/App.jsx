@@ -1,21 +1,27 @@
 import React from 'react'
 import { Route, Routes } from "react-router-dom"
 import Home from './pages/Home'
-import Auth from './pages/Auth'
+import Login from './pages/auth/Login'
 import Upload from './pages/Upload'
 import Dashboard from './pages/Dashboard'
 import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
+import Scale from './pages/Scale'
+import Analysis from './pages/Analysis'
+import Editor from './pages/Editor'
 
 const App = () => {
   return (
     <>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/auth" element={<Auth />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/upload" element={<Upload />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/scale" element={<Scale />} />
+        <Route path="/analysis" element={<Analysis />} />
+        <Route path="/editor" element={<Editor />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

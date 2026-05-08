@@ -24,7 +24,7 @@ const Navbar = () => {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-primary shadow-md group-hover:shadow-lg transition-shadow">
-            <Building2 className="h-5 w-5 text-primary-foreground" />
+            <Building2 className="h-5 w-5 text-[hsl(var(--primary-foreground))]" />
           </div>
         </Link>
 
