@@ -1,8 +1,9 @@
-import React, { useState, forwardRef } from "react";
+import React, { useState, forwardRef, useEffect } from "react";
 import { Building2 } from "lucide-react";
 import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import axiosInstance from "../../lib/axios";
 
 const cn = (...classes) => classes.filter(Boolean).join(" ");
 
@@ -44,12 +45,55 @@ const Login = () => {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data } = await axiosInstance.post("/api/auth/is-auth");
+        if (data.success) {
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        // User is not authenticated — stay on login page
+      }
+    };
+    checkAuth();
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-  }
 
+    try {
+      if (isLogin) {
+        const { data } = await axiosInstance.post("/api/auth/login", {
+          email,
+          password,
+        });
+        if (data.success) {
+          navigate("/dashboard");
+        } else {
+          alert(data.message);
+        }
+      } else {
+        const { data } = await axiosInstance.post("/api/auth/register", {
+          name: displayName,
+          email,
+          password,
+        });
+        if (data.success) {
+          navigate("/verify-email");
+        } else {
+          alert(data.message);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
