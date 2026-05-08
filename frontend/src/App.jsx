@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 import Scale from './pages/Scale'
+import Analysis from './pages/Analysis'
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/scale" element={<Scale />} />
+        <Route path="/analysis" element={<Analysis />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
