@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import axiosInstance from "../lib/axios";
 
 export const AuthContext = createContext();
 
@@ -9,28 +9,46 @@ export function AuthContextProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Check if user is logged in
-    axios.get("/api/user/data", { withCredentials: true })
-      .then(res => {
-        if (res.data.success) {
-          setUser(res.data.userData);
-        }
-      })
-      .catch(() => {
-        setUser(null);
-      })
-      .finally(() => setLoading(false));
+  // Re-fetches the current user from the server using the cookie token.
+  // Returns true if logged in, false otherwise.
+  const fetchUser = useCallback(async () => {
+      try {
+          const { data } = await axiosInstance.get("/api/user/data");
+          if (data.success) {
+              setUser(data.userData);
+              return true;
+          } else {
+              setUser(null);
+              return false;
+          }
+      } catch (error) {
+          setUser(null);
+          return false;
+      }
   }, []);
 
+  // On first mount, ask the backend who we are.
+  useEffect(() => {
+      (async () => {
+          await fetchUser();
+          setLoading(false);
+      })();
+  }, [fetchUser]);
+
+  // Logout: tell the server to clear the cookie, then clear local state.
   const logout = async () => {
-    await axios.post("/api/auth/logout", {}, { withCredentials: true });
-    setUser(null);
+      try {
+          await axiosInstance.post("/api/auth/logout");
+      } catch (error) {
+          // Even if the request fails, we clear local state.
+          console.warn("Logout request failed:", error.message);
+      }
+      setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
-      {children}
-    </AuthContext.Provider>
+      <AuthContext.Provider value={{ user, loading, logout, fetchUser, setUser }}>
+          {children}
+      </AuthContext.Provider>
   );
 }
