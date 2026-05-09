@@ -7,8 +7,9 @@ import Footer from "../../components/layout/Footer";
 import { Button } from "../../components/ui/button";
 import axiosInstance from "../../lib/axios";
 
-// Inline Input
 const cn = (...c) => c.filter(Boolean).join(" ");
+
+// Inline Input
 const Input = forwardRef(({ className, type, ...props }, ref) => (
   <input
     type={type}
@@ -20,6 +21,8 @@ const Input = forwardRef(({ className, type, ...props }, ref) => (
     {...props}
   />
 ));
+
+// Inline Label
 const Label = forwardRef(({ className, ...props }, ref) => (
   <label
     ref={ref}
