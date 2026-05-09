@@ -31,7 +31,7 @@ const Footer = () => {
 
   return (
     <div className="px-6 md:px-16 lg:px-24 xl:px-32">
-      <div className="flex flex-col md:flex-row items-start justify-between gap-10 py-10 border-b border-gray-500/30 text-gray-500">
+      <div className="container mx-auto flex flex-col md:flex-row items-start justify-between gap-10 py-10 border-b border-gray-500/30 text-gray-500">
         
         {/* LEFT SIDE */}
         <div>
@@ -40,7 +40,7 @@ const Footer = () => {
             src="Mini-Logo.png"
             alt="logo"
           />
-          <p className="max-w-[410px] mt-6">
+          <p className="max-w-[410px] mt-6 text-[hsl(var(--muted-foreground))]">
             AI-powered construction estimation for residential projects. Fast,
             accurate, and affordable.
           </p>
@@ -50,7 +50,7 @@ const Footer = () => {
         <div className="flex flex-wrap justify-between w-full md:w-[45%] gap-5">
           {linkSections.map((section, index) => (
             <div key={index}>
-              <h3 className="font-semibold text-base text-gray-900 md:mb-5 mb-2">
+              <h3 className="font-semibold text-base text-[hsl(var(--foreground))] md:mb-5 mb-2">
                 {section.title}
               </h3>
 
@@ -59,7 +59,7 @@ const Footer = () => {
                   <li key={i}>
                     <Link
                       to={link.path}
-                      className="text-muted-foreground hover:text-foreground transition-colors duration-300"
+                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors duration-300"
                     >
                       {link.name}
                     </Link>
