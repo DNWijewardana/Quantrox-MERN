@@ -37,18 +37,25 @@ export const register = async (req, res) => {
 
         // Sending Welcome EMail
 
-        const mailOption = {
-            from: process.env.SENDER_EMAIL,
-            to: email,
-            subject: 'Welcome to Quantrox – Your Construction Estimation Platform',
-            text: `Hello ${name},
-            Welcome to Quantrox! Your account has been successfully created using the email ${email}.
-            You can now log in and start estimating construction costs and materials from your house plans.`
+        try {
+            await transporter.sendMail({
+                from: process.env.SENDER_EMAIL,
+                to: email,
+                subject: 'Welcome to Quantrox – Your Construction Estimation Platform',
+                text:
+`Hello ${name},
+
+Welcome to Quantrox! Your account has been successfully created using the email ${email}.
+
+You can now log in and start estimating construction costs and materials from your house plans.
+
+– The Quantrox Team`
+            });
+        } catch (emailError) {
+            console.warn('Welcome email failed (non-fatal):', emailError.message);
         }
 
-        await transporter.sendMail(mailOption);
-
-        return res.json({success: true});
+        return res.json({ success: true });
 
     } catch (error) {
         return res.json({success: false, message: error.message})
@@ -111,47 +118,50 @@ export const logout = async (req, res) => {
     }
 }
 
-// User Email Verification using OTP
+// Send Account Verify OTP to user email
 
 export const sendVerifyOtp = async (req, res) => {
     try {
-        const {userId} = req.body;
-
+        const userId = req.userId;          // <-- from middleware
         const user = await userModel.findById(userId);
 
-        if(user.isAccountVerified){
-            return res.json({success: false, message: "Account is already verified"});
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+        if (user.isAccountVerified) {
+            return res.json({ success: false, message: "Account is already verified" });
         }
 
         const otp = String(Math.floor(100000 + Math.random() * 900000));
-        
         user.verifyOtp = otp;
-        user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000; // Otp Valied for 24 Hours
-
+        user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;   // 24 hours
         await user.save();
 
-        const mailOption = {
-            from: process.env.SENDER_EMAIL,
-            to: user.email,
-            subject: 'Quantrox – Account Verification OTP',
-            text: `Your OTP is ${otp}. It is valid for 24 hours. Please enter this OTP in the app to verify your account.`
+        try {
+            await transporter.sendMail({
+                from: process.env.SENDER_EMAIL,
+                to: user.email,
+                subject: 'Quantrox – Account Verification OTP',
+                text: `Your OTP is ${otp}. It is valid for 24 hours. Please enter this OTP in the app to verify your account.`
+            });
+        } catch (emailError) {
+            console.warn('Verify OTP email failed:', emailError.message);
+            return res.json({ success: false, message: "Could not send email. Please try again later." });
         }
 
-        await transporter.sendMail(mailOption);
-
-        return res.json({success: true, messsage: 'OTP sent to your email address'});
-
+        return res.json({ success: true, message: 'OTP sent to your email address' });
 
     } catch (error) {
-        res.json({success: false, message: error.message})
+        return res.json({ success: false, message: error.message });
     }
-}
+};
 
 // Verify Email using OTP 
 
 export const verifyEmail = async (req, res) => {
 
-    const {userId, otp} = req.body;
+    const userId = req.userId; // From middleware
+    const { otp } = req.body;
 
     if(!userId || !otp) {
         return res.json({success: false, message: 'Missing Details'})
@@ -217,14 +227,17 @@ export const sendResetOtp = async (req, res) => {
 
         await user.save();
 
-        const mailOption = {
-            from: process.env.SENDER_EMAIL,
-            to: user.email,
-            subject: 'Quantrox – Password Reset OTP',
-            text: `Your OTP is ${otp}. It is valid for 15 minutes. Please enter this OTP in the app to reset your password.`
+        try {
+            await transporter.sendMail({
+                from: process.env.SENDER_EMAIL,
+                to: user.email,
+                subject: 'Quantrox – Password Reset OTP',
+                text: `Your OTP is ${otp}. It is valid for 15 minutes. Please enter this OTP in the app to reset your password.`
+            });
+        } catch (emailError) {
+            console.warn('Reset OTP email failed:', emailError.message);
+            return res.json({ success: false, message: "Could not send email. Please try again later." });
         }
-
-        await transporter.sendMail(mailOption);
 
         return res.json({success: true, message: "OTP sent to your email address"});
 
