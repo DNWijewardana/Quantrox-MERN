@@ -1,4 +1,3 @@
-
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +9,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import {
   DollarSign,
@@ -25,10 +19,14 @@ import {
   Save,
   RotateCcw,
   MapPin,
+  Loader2,
 } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/useToast";
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
+import axiosInstance from "@/lib/axios";
+import { useAuth } from "@/context/AuthContext";
 
 const defaultMaterialRates = {
   cement: 1200,
@@ -39,7 +37,6 @@ const defaultMaterialRates = {
   plaster: 450,
   paint: 650,
 };
-
 const defaultLabourRates = {
   mason: 2500,
   helper: 1500,
@@ -47,7 +44,6 @@ const defaultLabourRates = {
   painter: 1800,
   plumber: 2000,
 };
-
 const defaultWastageFactors = {
   cement: 5,
   sand: 10,
@@ -58,31 +54,118 @@ const defaultWastageFactors = {
 };
 
 const Settings = () => {
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+
   const [materialRates, setMaterialRates] = useState(defaultMaterialRates);
   const [labourRates, setLabourRates] = useState(defaultLabourRates);
   const [wastageFactors, setWastageFactors] = useState(defaultWastageFactors);
   const [includeWastage, setIncludeWastage] = useState(true);
   const [region, setRegion] = useState("western");
 
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
-  const handleSave = () => {
-    toast({
-      title: "Settings Saved",
-      description: "Your estimation parameters have been updated.",
-    });
+  // Auth check
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.info("Please sign in first");
+      navigate("/login");
+    }
+  }, [authLoading, user, navigate]);
+
+  // Fetch settings from backend
+  useEffect(() => {
+    if (!user) return;
+
+    (async () => {
+      try {
+        setLoading(true);
+        const { data } = await axiosInstance.get("/api/settings");
+        if (data.success && data.settings) {
+          if (data.settings.materialRates)
+            setMaterialRates(data.settings.materialRates);
+          if (data.settings.labourRates)
+            setLabourRates(data.settings.labourRates);
+          if (data.settings.wastageFactors)
+            setWastageFactors(data.settings.wastageFactors);
+          if (typeof data.settings.includeWastage === "boolean") {
+            setIncludeWastage(data.settings.includeWastage);
+          }
+          if (data.settings.region) setRegion(data.settings.region);
+        }
+      } catch (err) {
+        toast.error("Could not load settings");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [user]);
+
+  // Save
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const { data } = await axiosInstance.post("/api/settings", {
+        materialRates,
+        labourRates,
+        wastageFactors,
+        includeWastage,
+        region,
+      });
+      if (data.success) {
+        toast.success("Settings saved!");
+      } else {
+        toast.error(data.message || "Could not save");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Save failed");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleReset = () => {
-    setMaterialRates(defaultMaterialRates);
-    setLabourRates(defaultLabourRates);
-    setWastageFactors(defaultWastageFactors);
+  // Reset to defaults (server-side)
+  const handleReset = async () => {
+    if (!window.confirm("Reset all values to default rates?")) return;
 
-    toast({
-      title: "Settings Reset",
-      description: "All parameters have been restored to defaults.",
-    });
+    try {
+      setResetting(true);
+      const { data } = await axiosInstance.post("/api/settings/reset");
+      if (data.success && data.settings) {
+        setMaterialRates(data.settings.materialRates || defaultMaterialRates);
+        setLabourRates(data.settings.labourRates || defaultLabourRates);
+        setWastageFactors(
+          data.settings.wastageFactors || defaultWastageFactors,
+        );
+        setIncludeWastage(data.settings.includeWastage !== false);
+        setRegion(data.settings.region || "western");
+        toast.success("Settings reset to defaults");
+      } else {
+        toast.error(data.message || "Could not reset");
+      }
+    } catch (err) {
+      toast.error("Reset failed");
+    } finally {
+      setResetting(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[hsl(var(--background))]">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center text-[hsl(var(--muted-foreground))]">
+            <Loader2 className="h-8 w-8 mx-auto animate-spin mb-2" />
+            <p>Loading your settings...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[hsl(var(--background))]">
@@ -90,34 +173,43 @@ const Settings = () => {
 
       <main className="flex-1 py-8">
         <div className="container max-w-4xl mx-auto px-4">
-          {/* Header */}
           <div className="mb-8">
             <h1 className="font-display text-2xl md:text-3xl font-bold text-[hsl(var(--foreground))]">
               Estimation Settings
             </h1>
             <p className="text-[hsl(var(--muted-foreground))] mt-1">
-              Customize material rates, labour costs, and wastage factors for your region.
+              Customize material rates, labour costs, and wastage factors for
+              your region.
             </p>
           </div>
 
           <Tabs defaultValue="materials" className="space-y-6">
             <TabsList className="bg-[hsl(var(--secondary))]/50 p-1">
-              <TabsTrigger value="materials" className="data-[state=active]:bg-[hsl(var(--background))]">
+              <TabsTrigger
+                value="materials"
+                className="data-[state=active]:bg-[hsl(var(--background))]"
+              >
                 <Package className="h-4 w-4 mr-2" />
                 Materials
               </TabsTrigger>
-
-              <TabsTrigger value="labour" className="data-[state=active]:bg-[hsl(var(--background))]">
+              <TabsTrigger
+                value="labour"
+                className="data-[state=active]:bg-[hsl(var(--background))]"
+              >
                 <Users className="h-4 w-4 mr-2" />
                 Labour
               </TabsTrigger>
-
-              <TabsTrigger value="wastage" className="data-[state=active]:bg-[hsl(var(--background))]">
+              <TabsTrigger
+                value="wastage"
+                className="data-[state=active]:bg-[hsl(var(--background))]"
+              >
                 <Percent className="h-4 w-4 mr-2" />
                 Wastage
               </TabsTrigger>
-
-              <TabsTrigger value="general" className="data-[state=active]:bg-[hsl(var(--background))]">
+              <TabsTrigger
+                value="general"
+                className="data-[state=active]:bg-[hsl(var(--background))]"
+              >
                 <MapPin className="h-4 w-4 mr-2" />
                 General
               </TabsTrigger>
@@ -132,10 +224,10 @@ const Settings = () => {
                     Material Unit Rates
                   </CardTitle>
                   <CardDescription>
-                    Set the current market prices for construction materials (LKR).
+                    Set the current market prices for construction materials
+                    (LKR).
                   </CardDescription>
                 </CardHeader>
-
                 <CardContent className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     {[
@@ -148,11 +240,12 @@ const Settings = () => {
                       { id: "paint", label: "Paint Emulsion (per liter)" },
                     ].map((item) => (
                       <div key={item.id}>
-                        <Label htmlFor={item.id}>{item.label}</Label>
+                        <Label htmlFor={`mat-${item.id}`}>{item.label}</Label>
                         <Input
-                          id={item.id}
+                          id={`mat-${item.id}`}
                           type="number"
-                          value={materialRates[item.id]}
+                          min="0"
+                          value={materialRates[item.id] ?? 0}
                           onChange={(e) =>
                             setMaterialRates({
                               ...materialRates,
@@ -177,10 +270,10 @@ const Settings = () => {
                     Labour Daily Rates
                   </CardTitle>
                   <CardDescription>
-                    Set the daily wage rates for different worker categories (LKR per day).
+                    Set the daily wage rates for different worker categories
+                    (LKR per day).
                   </CardDescription>
                 </CardHeader>
-
                 <CardContent className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     {[
@@ -191,11 +284,12 @@ const Settings = () => {
                       { id: "plumber", label: "Plumber" },
                     ].map((item) => (
                       <div key={item.id}>
-                        <Label htmlFor={item.id}>{item.label}</Label>
+                        <Label htmlFor={`lab-${item.id}`}>{item.label}</Label>
                         <Input
-                          id={item.id}
+                          id={`lab-${item.id}`}
                           type="number"
-                          value={labourRates[item.id]}
+                          min="0"
+                          value={labourRates[item.id] ?? 0}
                           onChange={(e) =>
                             setLabourRates({
                               ...labourRates,
@@ -223,7 +317,6 @@ const Settings = () => {
                     Set the expected wastage percentage for each material type.
                   </CardDescription>
                 </CardHeader>
-
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between p-4 rounded-lg bg-[hsl(var(--secondary))]/50 mb-4">
                     <div>
@@ -234,7 +327,6 @@ const Settings = () => {
                         Add wastage percentages to material quantities
                       </p>
                     </div>
-
                     <Switch
                       checked={includeWastage}
                       onCheckedChange={setIncludeWastage}
@@ -251,11 +343,13 @@ const Settings = () => {
                       { id: "paint", label: "Paint Wastage (%)" },
                     ].map((item) => (
                       <div key={item.id}>
-                        <Label htmlFor={item.id}>{item.label}</Label>
+                        <Label htmlFor={`was-${item.id}`}>{item.label}</Label>
                         <Input
-                          id={item.id}
+                          id={`was-${item.id}`}
                           type="number"
-                          value={wastageFactors[item.id]}
+                          min="0"
+                          max="100"
+                          value={wastageFactors[item.id] ?? 0}
                           onChange={(e) =>
                             setWastageFactors({
                               ...wastageFactors,
@@ -284,11 +378,9 @@ const Settings = () => {
                     Configure settings based on your project location.
                   </CardDescription>
                 </CardHeader>
-
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="region">Region / Province</Label>
-
                     <select
                       id="region"
                       value={region}
@@ -300,14 +392,20 @@ const Settings = () => {
                       <option value="southern">Southern Province</option>
                       <option value="northern">Northern Province</option>
                       <option value="eastern">Eastern Province</option>
-                      <option value="northwestern">North Western Province</option>
-                      <option value="northcentral">North Central Province</option>
+                      <option value="northwestern">
+                        North Western Province
+                      </option>
+                      <option value="northcentral">
+                        North Central Province
+                      </option>
                       <option value="uva">Uva Province</option>
-                      <option value="sabaragamuwa">Sabaragamuwa Province</option>
+                      <option value="sabaragamuwa">
+                        Sabaragamuwa Province
+                      </option>
                     </select>
-
                     <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
-                      Transport costs and material availability may vary by region.
+                      Transport costs and material availability may vary by
+                      region.
                     </p>
                   </div>
                 </CardContent>
@@ -315,15 +413,26 @@ const Settings = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Actions */}
           <div className="flex justify-end gap-3 mt-6">
-            <Button variant="outline" onClick={handleReset}>
-              <RotateCcw className="h-4 w-4 mr-2" />
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              disabled={resetting || saving}
+            >
+              {resetting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <RotateCcw className="h-4 w-4 mr-2" />
+              )}
               Reset to Defaults
             </Button>
 
-            <Button onClick={handleSave}>
-              <Save className="h-4 w-4 mr-2" />
+            <Button onClick={handleSave} disabled={saving || resetting}>
+              {saving ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
               Save Settings
             </Button>
           </div>
