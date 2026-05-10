@@ -1,477 +1,382 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-
 import {
-  ZoomIn,
-  ZoomOut,
-  Move,
   Layers,
   Eye,
   EyeOff,
-  RotateCcw,
   Sparkles,
   ArrowRight,
-  Maximize2,
+  Pencil,
+  Loader2,
+  Calculator,
 } from "lucide-react";
+import axiosInstance from "@/lib/axios";
+import { useAuth } from "@/context/AuthContext";
 
-import { useNavigate } from "react-router-dom";
 
-const mockRooms = [
-  {
-    id: "r1",
-    name: "Living Room",
-    x: 8,
-    y: 10,
-    w: 38,
-    h: 32,
-    area: 24.5,
-  },
-  {
-    id: "r2",
-    name: "Kitchen",
-    x: 48,
-    y: 10,
-    w: 26,
-    h: 22,
-    area: 12.8,
-  },
-  {
-    id: "r3",
-    name: "Bedroom 1",
-    x: 8,
-    y: 46,
-    w: 30,
-    h: 28,
-    area: 18.2,
-  },
-  {
-    id: "r4",
-    name: "Bedroom 2",
-    x: 40,
-    y: 46,
-    w: 26,
-    h: 28,
-    area: 15.6,
-  },
-  {
-    id: "r5",
-    name: "Bathroom",
-    x: 68,
-    y: 36,
-    w: 18,
-    h: 18,
-    area: 5.4,
-  },
-];
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
 const Analysis = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const projectId = params.get("id");
 
-  const [showWalls, setShowWalls] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+
+  const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   const [showRooms, setShowRooms] = useState(true);
+  const [showWalls, setShowWalls] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
+  const [showImage, setShowImage] = useState(true);
 
-  const [zoom, setZoom] = useState(1);
+  // Auth check
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.info("Please sign in first");
+      navigate("/login");
+      return;
+    }
+    if (!projectId && !authLoading) {
+      navigate("/dashboard");
+    }
+  }, [authLoading, user, projectId, navigate]);
 
-  const [pan, setPan] = useState({
-    x: 0,
-    y: 0,
-  });
+  // Load project
+  useEffect(() => {
+    if (!user || !projectId) return;
 
-  const [isDragging, setIsDragging] = useState(false);
+    (async () => {
+      try {
+        setLoading(true);
+        const { data } = await axiosInstance.get(`/api/project/${projectId}`);
+        if (data.success) {
+          setProject(data.project);
+        } else {
+          toast.error(data.message || "Could not load project");
+          navigate("/dashboard");
+        }
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Failed to load");
+        navigate("/dashboard");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [user, projectId, navigate]);
 
-  const dragStart = useRef({
-    x: 0,
-    y: 0,
-  });
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center text-[hsl(var(--muted-foreground))]">
+            <Loader2 className="h-8 w-8 mx-auto animate-spin mb-2" />
+            <p>Loading analysis...</p>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
-  const [selectedRoom, setSelectedRoom] = useState(null);
+  if (!project) return null;
 
-  const previewUrl =
-    typeof window !== "undefined"
-      ? sessionStorage.getItem("uploadedPlanPreview")
-      : null;
+  const imageUrl = project.planFile?.path
+    ? `${BACKEND_URL}/${project.planFile.path}`
+    : null;
+  const imageW = project.planFile?.width || 1200;
+  const imageH = project.planFile?.height || 800;
 
-  const handleMouseDown = (e) => {
-    setIsDragging(true);
+  const totalFloorArea = (project.rooms || []).reduce(
+    (s, r) => s + (r.area || 0),
+    0,
+  );
+  const totalWallLength = (project.walls || []).reduce(
+    (s, w) => s + (w.length || 0),
+    0,
+  );
 
-    dragStart.current = {
-      x: e.clientX - pan.x,
-      y: e.clientY - pan.y,
-    };
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-
-    setPan({
-      x: e.clientX - dragStart.current.x,
-      y: e.clientY - dragStart.current.y,
-    });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const resetView = () => {
-    setZoom(1);
-
-    setPan({
-      x: 0,
-      y: 0,
-    });
+  // Distinct color palette for room types
+  const colorByType = {
+    living: "rgba(56, 189, 248, 0.25)",
+    bedroom: "rgba(168, 85, 247, 0.25)",
+    kitchen: "rgba(251, 146, 60, 0.25)",
+    bathroom: "rgba(34, 197, 94, 0.25)",
+    dining: "rgba(236, 72, 153, 0.25)",
+    corridor: "rgba(148, 163, 184, 0.25)",
+    garage: "rgba(245, 158, 11, 0.25)",
+    other: "rgba(99, 102, 241, 0.25)",
   };
 
   return (
     <>
-    <Navbar />
-    <div className="min-h-screen flex flex-col bg-[hsl(var(--background))] px-6 md:px-16 lg:px-24 xl:px-32">
+      <Navbar />
+      <div className="min-h-screen flex flex-col bg-[hsl(var(--background))] px-6 md:px-16 lg:px-24 xl:px-32">
+        <main className="flex-1 py-8">
+          <div className="container mx-auto">
+            <div className="mb-6">
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+              >
+                ← Back to projects
+              </button>
+            </div>
 
-      <main className="flex-1 py-6">
-        <div className="container max-auto">
-
-          {/* Header */}
-          <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+              <div>
                 <h1 className="font-display text-2xl md:text-3xl font-bold text-[hsl(var(--foreground))]">
                   Plan Analysis
                 </h1>
-
-                <Badge
-                  variant="secondary"
-                  className="gap-1"
-                >
-                  <Sparkles className="h-3 w-3" />
-                  AI-Ready
-                </Badge>
+                <p className="text-[hsl(var(--muted-foreground))] mt-1">
+                  {project.name} ·{" "}
+                  <Badge variant="outline" className="ml-1">
+                    {project.status}
+                  </Badge>
+                </p>
               </div>
 
-              <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                Detected elements are highlighted. Toggle layers and inspect
-                details on the right.
-              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/editor?id=${projectId}`)}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit Plan
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => navigate(`/dashboard?id=${projectId}`)}
+                >
+                  <Calculator className="h-4 w-4 mr-2" />
+                  View Estimate
+                </Button>
+              </div>
             </div>
 
-            <Button
-              onClick={() => navigate("/editor")}
-              size="lg"
-            >
-              Edit Plan
-
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Main Grid */}
-          <div className="grid lg:grid-cols-[1fr_320px] gap-4">
-
-            {/* Viewer */}
-            <Card className="overflow-hidden">
-
-              {/* Toolbar */}
-              <div className="px-4 py-3 border-b border-[hsl(var(--border))] flex items-center justify-between bg-[hsl(var(--card))]">
-
-                <div className="flex items-center gap-1">
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setZoom((z) => Math.min(z + 0.2, 3))
-                    }
-                  >
-                    <ZoomIn className="h-4 w-4" />
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setZoom((z) => Math.max(z - 0.2, 0.4))
-                    }
-                  >
-                    <ZoomOut className="h-4 w-4" />
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={resetView}
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </Button>
-
-                  <span className="ml-2 text-xs text-[hsl(var(--muted-foreground))]">
-                    {Math.round(zoom * 100)}%
+            <div className="grid lg:grid-cols-[1fr_300px] gap-6">
+              {/* Plan canvas */}
+              <Card className="overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-[hsl(var(--border))] flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+                    <span className="text-sm font-medium">Detected Layout</span>
+                  </div>
+                  <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                    {project.rooms?.length || 0} rooms ·{" "}
+                    {project.walls?.length || 0} walls
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-[hsl(var(--muted-foreground))]">
-                  <Move className="h-3 w-3" />
-                  Drag to pan
-                </div>
-              </div>
-
-              {/* Canvas */}
-              <div
-                className="relative bg-[hsl(var(--muted))]/20 overflow-hidden select-none"
-                style={{
-                  height: "640px",
-                  cursor: isDragging ? "grabbing" : "grab",
-                }}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-              >
                 <div
-                  className="absolute inset-0 origin-center transition-transform"
-                  style={{
-                    transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-                  }}
+                  className="bg-[hsl(var(--muted))]/20"
+                  style={{ minHeight: 600 }}
                 >
-                  {previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt="Floor plan"
-                      className="w-full h-full object-contain pointer-events-none"
-                      draggable={false}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[hsl(var(--muted-foreground))]">
-
-                      <div className="text-center">
-                        <Maximize2 className="h-10 w-10 mx-auto mb-2 opacity-40" />
-
-                        <p className="text-sm">
-                          No plan loaded — upload one to see analysis
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Overlay SVG */}
                   <svg
-                    className="absolute inset-0 w-full h-full pointer-events-none"
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
+                    className="w-full h-full"
+                    viewBox={`0 0 ${imageW} ${imageH}`}
+                    preserveAspectRatio="xMidYMid meet"
+                    style={{ minHeight: 600 }}
                   >
-
-                    {/* Walls */}
-                    {showWalls && (
-                      <g
-                        stroke="hsl(var(--primary))"
-                        strokeWidth="0.4"
-                        fill="none"
-                        opacity="0.85"
-                      >
-                        {mockRooms.map((r) => (
-                          <rect
-                            key={`w-${r.id}`}
-                            x={r.x}
-                            y={r.y}
-                            width={r.w}
-                            height={r.h}
-                          />
-                        ))}
-                      </g>
+                    {/* Background plan image */}
+                    {showImage && imageUrl && (
+                      <image
+                        href={imageUrl}
+                        x={0}
+                        y={0}
+                        width={imageW}
+                        height={imageH}
+                        preserveAspectRatio="xMidYMid meet"
+                        opacity="0.6"
+                      />
                     )}
 
                     {/* Rooms */}
                     {showRooms &&
-                      mockRooms.map((r) => (
-                        <g
-                          key={`rm-${r.id}`}
-                          className="pointer-events-auto"
-                          style={{
-                            cursor: "pointer",
-                          }}
-                        >
-                          <rect
-                            x={r.x}
-                            y={r.y}
-                            width={r.w}
-                            height={r.h}
-                            fill="hsl(var(--accent))"
-                            opacity={
-                              selectedRoom === r.id
-                                ? 0.35
-                                : 0.15
-                            }
-                            onClick={() =>
-                              setSelectedRoom(r.id)
-                            }
+                      (project.rooms || []).map((r) => (
+                        <g key={r.id}>
+                          <polygon
+                            points={(r.points || [])
+                              .map((p) => `${p.x},${p.y}`)
+                              .join(" ")}
+                            fill={colorByType[r.type] || colorByType.other}
+                            stroke="hsl(var(--accent))"
+                            strokeWidth="2"
                           />
-
-                          {showLabels && (
-                            <text
-                              x={r.x + r.w / 2}
-                              y={r.y + r.h / 2}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                              fontSize="2"
-                              fill="hsl(var(--foreground))"
-                              fontWeight="600"
-                            >
-                              {r.name}
-                            </text>
-                          )}
+                          {showLabels &&
+                            r.points?.length > 0 &&
+                            (() => {
+                              const cx =
+                                r.points.reduce((s, p) => s + p.x, 0) /
+                                r.points.length;
+                              const cy =
+                                r.points.reduce((s, p) => s + p.y, 0) /
+                                r.points.length;
+                              return (
+                                <g>
+                                  <text
+                                    x={cx}
+                                    y={cy - 6}
+                                    textAnchor="middle"
+                                    fontSize="14"
+                                    fontWeight="600"
+                                    fill="hsl(var(--foreground))"
+                                    paintOrder="stroke"
+                                    stroke="hsl(var(--background))"
+                                    strokeWidth="3"
+                                  >
+                                    {r.name}
+                                  </text>
+                                  <text
+                                    x={cx}
+                                    y={cy + 10}
+                                    textAnchor="middle"
+                                    fontSize="11"
+                                    fill="hsl(var(--muted-foreground))"
+                                    paintOrder="stroke"
+                                    stroke="hsl(var(--background))"
+                                    strokeWidth="3"
+                                  >
+                                    {Number(r.area || 0).toFixed(2)} m²
+                                  </text>
+                                </g>
+                              );
+                            })()}
                         </g>
+                      ))}
+
+                    {/* Walls */}
+                    {showWalls &&
+                      (project.walls || []).map((w) => (
+                        <line
+                          key={w.id}
+                          x1={w.a?.x}
+                          y1={w.a?.y}
+                          x2={w.b?.x}
+                          y2={w.b?.y}
+                          stroke="hsl(var(--primary))"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                        />
                       ))}
                   </svg>
                 </div>
-              </div>
-            </Card>
+              </Card>
 
-            {/* Sidebar */}
-            <div className="space-y-4">
-
-              {/* Layer Visibility */}
-              <Card className="p-5">
-
-                <div className="flex items-center gap-2 mb-4">
-                  <Layers className="h-4 w-4 text-[hsl(var(--accent))]" />
-
-                  <h3 className="font-semibold text-sm">
-                    Layer Visibility
+              {/* Right panel */}
+              <div className="space-y-4">
+                {/* Stats */}
+                <Card className="p-5">
+                  <h3 className="font-semibold text-[hsl(var(--foreground))] mb-4 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-[hsl(var(--accent))]" />
+                    Summary
                   </h3>
-                </div>
 
-                <div className="space-y-3">
-                  {[
-                    {
-                      key: "walls",
-                      label: "Walls",
-                      value: showWalls,
-                      set: setShowWalls,
-                    },
-                    {
-                      key: "rooms",
-                      label: "Rooms",
-                      value: showRooms,
-                      set: setShowRooms,
-                    },
-                    {
-                      key: "labels",
-                      label: "Labels",
-                      value: showLabels,
-                      set: setShowLabels,
-                    },
-                  ].map((item) => (
-                    <div
-                      key={item.key}
-                      className="flex items-center justify-between"
-                    >
-                      <Label
-                        htmlFor={item.key}
-                        className="flex items-center gap-2 text-sm cursor-pointer"
-                      >
-                        {item.value ? (
-                          <Eye className="h-3.5 w-3.5" />
-                        ) : (
-                          <EyeOff className="h-3.5 w-3.5 opacity-50" />
-                        )}
+                  <div className="space-y-3">
+                    <Stat
+                      label="Total Rooms"
+                      value={project.rooms?.length || 0}
+                    />
+                    <Stat
+                      label="Total Walls"
+                      value={project.walls?.length || 0}
+                    />
+                    <Stat
+                      label="Floor Area"
+                      value={`${totalFloorArea.toFixed(2)} m²`}
+                    />
+                    <Stat
+                      label="Wall Length"
+                      value={`${totalWallLength.toFixed(2)} m`}
+                    />
+                    <Stat
+                      label="Scale"
+                      value={`${(project.scale?.pixelsPerMeter || 0).toFixed(0)} px/m`}
+                    />
+                  </div>
+                </Card>
 
-                        {item.label}
-                      </Label>
+                {/* Layer toggles */}
+                <Card className="p-5">
+                  <h3 className="font-semibold text-[hsl(var(--foreground))] mb-4 flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+                    Layers
+                  </h3>
 
-                      <Switch
-                        id={item.key}
-                        checked={item.value}
-                        onCheckedChange={item.set}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </Card>
+                  <div className="space-y-3">
+                    <Toggle
+                      label="Plan image"
+                      checked={showImage}
+                      onChange={setShowImage}
+                    />
+                    <Toggle
+                      label="Rooms"
+                      checked={showRooms}
+                      onChange={setShowRooms}
+                    />
+                    <Toggle
+                      label="Walls"
+                      checked={showWalls}
+                      onChange={setShowWalls}
+                    />
+                    <Toggle
+                      label="Labels"
+                      checked={showLabels}
+                      onChange={setShowLabels}
+                    />
+                  </div>
+                </Card>
 
-              {/* Zoom */}
-              <Card className="p-5">
-                <h3 className="font-semibold text-sm mb-3">
-                  Zoom Level
-                </h3>
-
-                <Slider
-                  value={[zoom * 100]}
-                  min={40}
-                  max={300}
-                  step={10}
-                  onValueChange={(v) =>
-                    setZoom(v[0] / 100)
-                  }
-                />
-
-                <p className="text-xs text-[hsl(var(--muted-foreground))] mt-2">
-                  {Math.round(zoom * 100)}%
-                </p>
-              </Card>
-
-              {/* Rooms */}
-              <Card className="p-5">
-
-                <h3 className="font-semibold text-sm mb-3">
-                  Detected Rooms
-                </h3>
-
-                <div className="space-y-2 max-h-[260px] overflow-y-auto">
-                  {mockRooms.map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() =>
-                        setSelectedRoom(r.id)
-                      }
-                      className={`w-full text-left p-2.5 rounded-lg border text-sm transition-colors ${
-                        selectedRoom === r.id
-                          ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/10"
-                          : "border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))]/50"
-                      }`}
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">
-                          {r.name}
-                        </span>
-
-                        <span className="text-xs text-[hsl(var(--muted-foreground))]">
-                          {r.area} m²
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </Card>
-
-              {/* Info */}
-              <Card className="p-4 bg-[hsl(var(--info))]/5 border-[hsl(var(--info))]/20">
-
-                <div className="flex gap-2">
-                  <Sparkles className="h-4 w-4 text-[hsl(var(--info))] shrink-0 mt-0.5" />
-
-                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                    AI detection placeholder — will be replaced
-                    with real model output (YOLOv8 / OpenCV).
-                  </p>
-                </div>
-              </Card>
+                <Button
+                  onClick={() => navigate(`/dashboard?id=${projectId}`)}
+                  className="w-full"
+                >
+                  Continue to Estimate
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </main>
-
-
-    </div>  
-    <Footer />  
+        </main>
+      </div>
+      <Footer />
     </>
-
   );
 };
+
+// Small components
+const Stat = ({ label, value }) => (
+  <div className="flex items-baseline justify-between">
+    <span className="text-sm text-[hsl(var(--muted-foreground))]">{label}</span>
+    <span className="text-sm font-semibold text-[hsl(var(--foreground))]">
+      {value}
+    </span>
+  </div>
+);
+
+const Toggle = ({ label, checked, onChange }) => (
+  <div className="flex items-center justify-between">
+    <Label className="text-sm flex items-center gap-2">
+      {checked ? (
+        <Eye className="h-3.5 w-3.5" />
+      ) : (
+        <EyeOff className="h-3.5 w-3.5" />
+      )}
+      {label}
+    </Label>
+    <Switch checked={checked} onCheckedChange={onChange} />
+  </div>
+);
 
 export default Analysis;
