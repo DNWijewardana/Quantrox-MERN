@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,65 +12,68 @@ import {
   Info,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/useToast";
+import { toast } from "react-toastify";
 import Navbar from "@/components/layout/Navbar";
+import axiosInstance from "@/lib/axios";
+import { useAuth } from "@/context/AuthContext";
 
 const Upload = () => {
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [projectName, setProjectName] = useState("");
   const [scale, setScale] = useState("1:100");
   const [referenceDimension, setReferenceDimension] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  // Auth check
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.info("Please sign in first");
+      navigate("/login");
+    }
+  }, [authLoading, user, navigate]);
 
+  // Drag and drop handlers
   const handleDrop = useCallback((e) => {
     e.preventDefault();
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && isValidFile(droppedFile)) {
-      setFile(droppedFile);
-      createPreview(droppedFile);
+    const dropped = e.dataTransfer.files[0];
+    if (dropped && isValidFile(dropped)) {
+      setFile(dropped);
+      createPreview(dropped);
     }
   }, []);
 
   const handleFileSelect = (e) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile && isValidFile(selectedFile)) {
-      setFile(selectedFile);
-      createPreview(selectedFile);
+    const selected = e.target.files?.[0];
+    if (selected && isValidFile(selected)) {
+      setFile(selected);
+      createPreview(selected);
     }
   };
 
-  const isValidFile = (file) => {
-    const validTypes = [
-      "image/png",
-      "image/jpeg",
-      "image/jpg",
-      "application/pdf",
-    ];
-
-    if (!validTypes.includes(file.type)) {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload a PNG, JPG, or PDF file.",
-        variant: "destructive",
-      });
+  const isValidFile = (f) => {
+    const valid = ["image/png", "image/jpeg", "image/jpg", "application/pdf"];
+    if (!valid.includes(f.type)) {
+      toast.error("Please upload a PNG, JPG, or PDF file.");
       return false;
     }
-
+    if (f.size > 10 * 1024 * 1024) {
+      toast.error("File is too large (max 10 MB).");
+      return false;
+    }
     return true;
   };
 
-  const createPreview = (file) => {
-    if (file.type.startsWith("image/")) {
+  const createPreview = (f) => {
+    if (f.type.startsWith("image/")) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      reader.onloadend = () => setPreview(reader.result);
+      reader.readAsDataURL(f);
     } else {
-      setPreview(null);
+      setPreview(null); // PDFs have no inline preview
     }
   };
 
@@ -79,20 +82,49 @@ const Upload = () => {
     setPreview(null);
   };
 
+  // The real upload
   const handleAnalyze = async () => {
     if (!file) return;
-
     setIsProcessing(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Build a multipart form so Multer on the backend can see the file.
+      const fd = new FormData();
+      fd.append("plan", file); // field name MUST match upload.single('plan')
+      fd.append("name", projectName || file.name.replace(/\.[^.]+$/, ""));
+      fd.append(
+        "description",
+        referenceDimension ? `Reference: ${referenceDimension}` : "",
+      );
 
-    toast({
-      title: "Analysis Complete",
-      description: "Your floor plan has been analyzed successfully.",
-    });
+      const { data } = await axiosInstance.post("/api/project/create", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-    setIsProcessing(false);
-    navigate("/dashboard");
+      if (data.success) {
+        toast.success("Plan uploaded! Now set the scale.");
+        // Pre-load preview into sessionStorage so Scale can show it instantly
+        if (preview) {
+          try {
+            sessionStorage.setItem("uploadedPlanPreview", preview);
+          } catch {
+            /* storage quota — ignore, Scale will load from backend */
+          }
+        }
+        navigate(`/scale?id=${data.project._id}`);
+      } else {
+        toast.error(data.message || "Upload failed");
+      }
+    } catch (err) {
+      // Multer / network errors come through here
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Upload failed. Please try again.";
+      toast.error(msg);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -116,6 +148,23 @@ const Upload = () => {
           <div className="grid lg:grid-cols-2 gap-8">
             {/* LEFT SIDE */}
             <div className="space-y-6">
+              {/* PROJECT NAME */}
+              <div className="p-6 rounded-xl bg-[hsl(var(--card))] border border-[hsl(var(--border))] shadow-card">
+                <Label htmlFor="projectName" className="font-semibold">
+                  Project Name (optional)
+                </Label>
+                <Input
+                  id="projectName"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  placeholder="My House, Plan v1, etc."
+                  className="mt-2"
+                />
+                <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
+                  Leave blank to use the file name.
+                </p>
+              </div>
+
               {/* UPLOAD BOX */}
               <div
                 onDrop={handleDrop}
@@ -131,22 +180,18 @@ const Upload = () => {
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[hsl(var(--secondary))] mx-auto mb-4">
                       <UploadIcon className="h-8 w-8 text-[hsl(var(--muted-foreground))]" />
                     </div>
-
                     <h3 className="font-semibold text-[hsl(var(--foreground))] mb-2">
-                      Drag & Drop your plan here
+                      Drag &amp; Drop your plan here
                     </h3>
-
                     <p className="text-sm text-[hsl(var(--muted-foreground))] mb-4">
                       or click to browse files
                     </p>
-
                     <input
                       type="file"
                       accept=".png,.jpg,.jpeg,.pdf"
                       onChange={handleFileSelect}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
-
                     <div className="flex items-center justify-center gap-2 text-xs text-[hsl(var(--muted-foreground))]">
                       <FileImage className="h-4 w-4" />
                       <span>PNG, JPG, PDF up to 10MB</span>
@@ -154,13 +199,11 @@ const Upload = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {/* FILE INFO */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[hsl(var(--success))]/20">
                           <FileImage className="h-5 w-5 text-[hsl(var(--success))]" />
                         </div>
-
                         <div>
                           <p className="font-medium text-[hsl(var(--foreground))] text-sm truncate max-w-[200px]">
                             {file.name}
@@ -170,16 +213,15 @@ const Upload = () => {
                           </p>
                         </div>
                       </div>
-
                       <button
                         onClick={removeFile}
                         className="p-2 rounded-lg hover:bg-[hsl(var(--destructive))]/10 text-[hsl(var(--destructive))] transition-colors"
+                        aria-label="Remove file"
                       >
                         <X className="h-4 w-4" />
                       </button>
                     </div>
 
-                    {/* PREVIEW */}
                     {preview && (
                       <div className="relative rounded-lg overflow-hidden border border-[hsl(var(--border))]">
                         <img
@@ -193,21 +235,27 @@ const Upload = () => {
                 )}
               </div>
 
-              {/* SCALE */}
+              {/* SCALE HINT (saved to project description) */}
               <div className="p-6 rounded-xl bg-[hsl(var(--card))] border border-[hsl(var(--border))] shadow-card">
                 <div className="flex items-center gap-2 mb-4">
                   <Ruler className="h-5 w-5 text-[hsl(var(--accent))]" />
                   <h3 className="font-semibold text-[hsl(var(--foreground))]">
-                    Scale Calibration
+                    Scale Hint (optional)
                   </h3>
                 </div>
+                <p className="text-xs text-[hsl(var(--muted-foreground))] mb-4">
+                  You'll calibrate the exact scale on the next page. These are
+                  just hints saved with the project.
+                </p>
 
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="scale" className="text-[hsl(var(--muted-foreground))]">
+                    <Label
+                      htmlFor="scale"
+                      className="text-[hsl(var(--muted-foreground))]"
+                    >
                       Drawing Scale
                     </Label>
-
                     <select
                       id="scale"
                       value={scale}
@@ -222,24 +270,22 @@ const Upload = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="reference" className="text-[hsl(var(--muted-foreground))]">
+                    <Label
+                      htmlFor="reference"
+                      className="text-[hsl(var(--muted-foreground))]"
+                    >
                       Reference Dimension (optional)
                     </Label>
-
                     <Input
                       id="reference"
                       type="text"
                       placeholder="e.g., 10m wall length"
                       value={referenceDimension}
-                      onChange={(e) =>
-                        setReferenceDimension(e.target.value)
-                      }
+                      onChange={(e) => setReferenceDimension(e.target.value)}
                       className="mt-1 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] border-[hsl(var(--input))]"
                     />
-
                     <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
-                      If known, enter a dimension from your plan for better
-                      accuracy.
+                      If known, enter a dimension from your plan.
                     </p>
                   </div>
                 </div>
@@ -248,7 +294,6 @@ const Upload = () => {
 
             {/* RIGHT SIDE */}
             <div className="space-y-6">
-              {/* TIPS */}
               <div className="p-6 rounded-xl bg-[hsl(var(--card))] border border-[hsl(var(--border))] shadow-card">
                 <div className="flex items-center gap-2 mb-4">
                   <Info className="h-5 w-5 text-[hsl(var(--info))]" />
@@ -256,7 +301,6 @@ const Upload = () => {
                     Tips for Best Results
                   </h3>
                 </div>
-
                 <ul className="space-y-3 text-sm text-[hsl(var(--muted-foreground))]">
                   {[
                     "Use high-resolution images (300 DPI recommended)",
@@ -275,31 +319,31 @@ const Upload = () => {
                 </ul>
               </div>
 
-              {/* PLAN TYPES */}
               <div className="p-6 rounded-xl bg-[hsl(var(--accent))]/10 border border-[hsl(var(--accent))]/20">
                 <h4 className="font-semibold text-[hsl(var(--foreground))] mb-2">
                   Supported Plan Types
                 </h4>
-
                 <p className="text-sm text-[hsl(var(--muted-foreground))] mb-3">
                   Currently optimized for single-story residential floor plans:
                 </p>
-
                 <div className="flex flex-wrap gap-2">
-                  {["Living Room", "Bedroom", "Kitchen", "Bathroom", "Garage"].map(
-                    (room) => (
-                      <span
-                        key={room}
-                        className="px-3 py-1 rounded-full bg-[hsl(var(--background))] text-xs font-medium text-[hsl(var(--foreground))] border border-[hsl(var(--border))]"
-                      >
-                        {room}
-                      </span>
-                    )
-                  )}
+                  {[
+                    "Living Room",
+                    "Bedroom",
+                    "Kitchen",
+                    "Bathroom",
+                    "Garage",
+                  ].map((room) => (
+                    <span
+                      key={room}
+                      className="px-3 py-1 rounded-full bg-[hsl(var(--background))] text-xs font-medium text-[hsl(var(--foreground))] border border-[hsl(var(--border))]"
+                    >
+                      {room}
+                    </span>
+                  ))}
                 </div>
               </div>
 
-              {/* BUTTON */}
               <Button
                 onClick={handleAnalyze}
                 disabled={!file || isProcessing}
@@ -309,11 +353,11 @@ const Upload = () => {
                 {isProcessing ? (
                   <>
                     <div className="h-5 w-5 border-2 border-[hsl(var(--primary-foreground))]/30 border-t-[hsl(var(--primary-foreground))] rounded-full animate-spin" />
-                    Analyzing Plan...
+                    Uploading...
                   </>
                 ) : (
                   <>
-                    Analyze Floor Plan
+                    Upload &amp; Continue
                     <ArrowRight className="h-5 w-5" />
                   </>
                 )}
