@@ -10,6 +10,7 @@ import authRouter     from "./routes/authRoutes.js";
 import userRouter     from "./routes/userRoutes.js";
 import projectRouter  from "./routes/projectRoutes.js";
 import settingsRouter from "./routes/settingsRoutes.js";
+import estimateRouter from "./routes/estimateRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
@@ -52,10 +53,9 @@ app.use('/api/auth', authRouter)
 app.use('/api/user', userRouter)
 app.use('/api/project',  projectRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/estimate', estimateRouter);  
 
 // Global error handler
-// Catches errors thrown by Multer (e.g. wrong file type, > 10 MB)
-// and any other un-caught errors, returning a clean JSON response.
 app.use((err, req, res, next) => {
     console.error('Server error:', err.message);
     res.status(err.status || 500).json({
