@@ -40,6 +40,8 @@ const Dashboard = () => {
   const [calculating, setCalculating] = useState(false);
   const [needsCalculation, setNeedsCalculation] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [exportingExcel, setExportingExcel] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   // Auth check
   useEffect(() => {
@@ -140,6 +142,76 @@ const Dashboard = () => {
       setDeletingId(null);
     }
   };
+
+  // Read filename from a Content-Disposition header.
+  // Browsers send: `attachment; filename="MyProject_BOQ_2026-05-12.xlsx"`
+  function filenameFromHeader(header, fallback) {
+    if (!header) return fallback;
+    const match = /filename\*?=(?:UTF-8'')?\"?([^\";]+)\"?/i.exec(header);
+    return match ? decodeURIComponent(match[1]) : fallback;
+  }
+
+  // Trigger a real browser download from a Blob
+  function triggerBlobDownload(blob, filename) {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+  }
+
+  // Generic export — handles both Excel and PDF
+  async function downloadExport(format) {
+    const setBusy = format === "excel" ? setExportingExcel : setExportingPdf;
+    const url = `/api/export/${projectId}/${format}`;
+    const fallback = `${project?.name || "BOQ"}.${format === "excel" ? "xlsx" : "pdf"}`;
+
+    try {
+      setBusy(true);
+      const response = await axiosInstance.get(url, {
+        responseType: "blob",
+      });
+
+      // The server might still return a JSON error with status 200 if
+      // something went wrong — sniff the content-type.
+      const ct = response.headers["content-type"] || "";
+      if (ct.includes("application/json")) {
+        // Convert blob → text → JSON to read the error message
+        const text = await response.data.text();
+        try {
+          const json = JSON.parse(text);
+          throw new Error(json.message || "Export failed");
+        } catch (parseErr) {
+          throw new Error("Export failed");
+        }
+      }
+
+      const filename = filenameFromHeader(
+        response.headers["content-disposition"],
+        fallback,
+      );
+      triggerBlobDownload(response.data, filename);
+      toast.success(`${format === "excel" ? "Excel" : "PDF"} downloaded`);
+    } catch (err) {
+      // Try to extract a JSON error from the blob body
+      let msg = err.message || "Export failed";
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const json = JSON.parse(text);
+          msg = json.message || msg;
+        } catch {
+          /* keep default message */
+        }
+      }
+      toast.error(msg);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   // Loading state
   if (loading) {
@@ -451,20 +523,30 @@ const Dashboard = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled
-                  title="Coming Day 4"
+                  onClick={() => downloadExport("pdf")}
+                  disabled={exportingPdf || exportingExcel}
+                  title="Download BOQ as PDF"
                 >
-                  <FileText className="h-4 w-4 mr-2" />
+                  {exportingPdf ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <FileText className="h-4 w-4 mr-2" />
+                  )}
                   Export PDF
                 </Button>
 
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled
-                  title="Coming Day 4"
+                  onClick={() => downloadExport("excel")}
+                  disabled={exportingExcel || exportingPdf}
+                  title="Download BOQ as Excel"
                 >
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  {exportingExcel ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  )}
                   Export Excel
                 </Button>
               </div>
