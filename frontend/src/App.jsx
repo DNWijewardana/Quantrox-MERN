@@ -14,6 +14,7 @@ import Analysis from "./pages/Analysis";
 import Editor from "./pages/Editor";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import About from "./pages/About";
 
 const App = () => {
   return (
@@ -32,6 +33,7 @@ const App = () => {
       <Routes>
         {/* Public */}
         <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />

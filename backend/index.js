@@ -11,6 +11,7 @@ import userRouter     from "./routes/userRoutes.js";
 import projectRouter  from "./routes/projectRoutes.js";
 import settingsRouter from "./routes/settingsRoutes.js";
 import estimateRouter from "./routes/estimateRoutes.js";
+import exportRouter from "./routes/exportRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
@@ -41,7 +42,8 @@ app.use(cors({
         }
         return callback(new Error('Not allowed by CORS: ' + origin));
     },
-    credentials: true
+    credentials: true,
+    exposedHeaders: ["Content-Disposition"]
 }));
 
 // Static folder for uploaded plans
@@ -54,6 +56,7 @@ app.use('/api/user', userRouter)
 app.use('/api/project',  projectRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/estimate', estimateRouter);  
+app.use("/api/export", exportRouter);
 
 // Global error handler
 app.use((err, req, res, next) => {

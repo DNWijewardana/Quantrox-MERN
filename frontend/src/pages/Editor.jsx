@@ -17,6 +17,7 @@ import {
   HelpCircle,
   ArrowRight,
   Loader2,
+  Undo2,
 } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 import { useAuth } from "@/context/AuthContext";
@@ -125,7 +126,7 @@ const Editor = () => {
   const ppm = project?.scale?.pixelsPerMeter || 100;
 
   // Convert a click event to SVG canvas coordinates.
-  // Important: we use the SVG's viewBox for accurate coordinates
+  // Important: I use the SVG's viewBox for accurate coordinates
   // even when the SVG is scaled by CSS.
   const getSvgPoint = useCallback((e) => {
     const svg = svgRef.current;
@@ -211,24 +212,66 @@ const Editor = () => {
     toast.success(`Room "${name}" added (${area.toFixed(2)} m²)`);
   };
 
-  // Press Enter while drawing a room → close polygon
+  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e) => {
+      // Don't hijack typing
+      const tag = (e.target?.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+      if (e.target?.isContentEditable) return;
+
+      // Esc: always cancels current draw
       if (e.key === "Escape") {
         setRoomDraft([]);
         setDrawStart(null);
         return;
       }
-      if (tool !== "room") return;
-      if (e.key === "Enter" && roomDraft.length >= 3) {
+
+      // Enter: close room polygon
+      if (e.key === "Enter" && tool === "room" && roomDraft.length >= 3) {
         finalizeRoom(roomDraft);
         setRoomDraft([]);
+        return;
       }
+
+      // Backspace: undo last point in room draft (when drawing)
+      if (e.key === "Backspace" && tool === "room" && roomDraft.length > 0) {
+        e.preventDefault();
+        setRoomDraft(roomDraft.slice(0, -1));
+        return;
+      }
+
+      // Ctrl+Z / Cmd+Z — undo last wall when in select mode
+      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+        e.preventDefault();
+        if (tool === "room" && roomDraft.length > 0) {
+          setRoomDraft(roomDraft.slice(0, -1));
+        } else if (walls.length > 0) {
+          const removed = walls[walls.length - 1];
+          setWalls(walls.slice(0, -1));
+          toast.info(`Removed last wall (${removed.length?.toFixed(2)}m)`);
+        }
+        return;
+      }
+
+      // Tool shortcuts (only single key, no modifiers)
+      if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+      const k = e.key.toLowerCase();
+      const switchTool = (t) => {
+        setTool(t);
+        setDrawStart(null);
+        setRoomDraft([]);
+        setSelectedId(null);
+      };
+      if (k === "s") switchTool("select");
+      else if (k === "w") switchTool("wall");
+      else if (k === "r") switchTool("room");
+      else if (k === "l") switchTool("label");
+      else if (k === "d") switchTool("delete");
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tool, roomDraft]);
+  }, [tool, roomDraft, walls]);
 
   //  Click on existing element
   const handleWallClick = (e, id) => {
@@ -364,11 +407,11 @@ const Editor = () => {
 
   //  Tool definitions
   const tools = [
-    { id: "select", icon: MousePointer2, label: "Select" },
-    { id: "wall", icon: Minus, label: "Draw Wall" },
-    { id: "room", icon: Square, label: "Draw Room" },
-    { id: "label", icon: Tag, label: "Add Label" },
-    { id: "delete", icon: Trash2, label: "Delete" },
+    { id: "select", icon: MousePointer2, label: "Select", shortcut: "S" },
+    { id: "wall", icon: Minus, label: "Draw Wall", shortcut: "W" },
+    { id: "room", icon: Square, label: "Draw Room", shortcut: "R" },
+    { id: "label", icon: Tag, label: "Add Label", shortcut: "L" },
+    { id: "delete", icon: Trash2, label: "Delete", shortcut: "D" },
   ];
 
   // Background image URL
@@ -415,6 +458,29 @@ const Editor = () => {
               </div>
 
               <div className="flex flex-wrap gap-2">
+                {/* Undo last wall (or last room point) */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (tool === "room" && roomDraft.length > 0) {
+                      setRoomDraft(roomDraft.slice(0, -1));
+                    } else if (walls.length > 0) {
+                      setWalls(walls.slice(0, -1));
+                      toast.info("Removed last wall");
+                    } else if (rooms.length > 0) {
+                      const removed = rooms[rooms.length - 1];
+                      setRooms(rooms.slice(0, -1));
+                      toast.info(`Removed room "${removed.name}"`);
+                    }
+                  }}
+                  disabled={!walls.length && !rooms.length && !roomDraft.length}
+                  title="Undo last action (Ctrl+Z)"
+                >
+                  <Undo2 className="h-4 w-4" />
+                  Undo
+                </Button>
+
                 {/* AI Detect button — only enabled when Python service is alive */}
                 <Button
                   variant="outline"
@@ -479,6 +545,7 @@ const Editor = () => {
                         setRoomDraft([]);
                         setSelectedId(null);
                       }}
+                      title={`${t.label}  (press ${t.shortcut})`}
                       className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                         active
                           ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
@@ -486,7 +553,16 @@ const Editor = () => {
                       }`}
                     >
                       <Icon className="h-4 w-4" />
-                      {t.label}
+                      <span className="flex-1 text-left">{t.label}</span>
+                      <kbd
+                        className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
+                          active
+                            ? "bg-white/20 text-white/90"
+                            : "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"
+                        }`}
+                      >
+                        {t.shortcut}
+                      </kbd>
                     </button>
                   );
                 })}
@@ -495,9 +571,10 @@ const Editor = () => {
                   <div className="flex items-start gap-2 px-2 py-2 rounded-lg bg-[hsl(var(--info))]/5">
                     <HelpCircle className="h-3.5 w-3.5 text-[hsl(var(--info))] shrink-0 mt-0.5" />
                     <p className="text-[11px] text-[hsl(var(--muted-foreground))] leading-relaxed">
-                      {tool === "wall" && "Click two points to draw a wall."}
+                      {tool === "wall" &&
+                        "Click two points to draw a wall. Esc cancels."}
                       {tool === "room" &&
-                        "Click points around a room. Click first point or press Enter to close."}
+                        "Click points around a room. Click first point or press Enter to close. Backspace undoes last point."}
                       {tool === "select" &&
                         "Click an element. Drag wall endpoints to move."}
                       {tool === "delete" && "Click any element to remove it."}
