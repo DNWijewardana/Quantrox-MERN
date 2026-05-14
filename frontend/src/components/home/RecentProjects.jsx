@@ -9,11 +9,11 @@ import {
   Loader2,
   PlusCircle,
 } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
-import axiosInstance from "../lib/axios";
-import { Card, CardContent } from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
+import { useAuth } from "../../context/AuthContext";
+import axiosInstance from "../../lib/axios";
+import { Card, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 
 // Recent projects with quick actions
 const RecentProjects = () => {
