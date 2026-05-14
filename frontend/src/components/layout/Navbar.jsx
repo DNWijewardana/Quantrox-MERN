@@ -4,18 +4,25 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
 
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/upload", label: "Upload Plan" },
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/settings", label: "Settings" },
-];
-
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  // Different nav links for guests vs logged-in users
+  const navLinks = user
+    ? [
+        { href: "/", label: "Home" },
+        { href: "/upload", label: "Upload Plan" },
+        { href: "/dashboard", label: "Dashboard" },
+        { href: "/settings", label: "Settings" },
+        { href: "/about", label: "About" },
+      ]
+    : [
+        { href: "/", label: "Home" },
+        { href: "/about", label: "About" },
+      ];
 
   const handleLogout = async () => {
     await logout();
@@ -24,7 +31,6 @@ const Navbar = () => {
     setIsMenuOpen(false);
   };
 
-  // Use the first name only, to keep the navbar tidy
   const displayName = user?.name?.split(" ")[0] || user?.email || "";
 
   return (
@@ -40,7 +46,7 @@ const Navbar = () => {
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
+        {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => (
             <Link
@@ -57,7 +63,7 @@ const Navbar = () => {
           ))}
         </nav>
 
-        {/* Desktop Buttons */}
+        {/* Desktop buttons */}
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <>
@@ -93,7 +99,7 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
+        {/* Mobile toggle */}
         <button
           className="md:hidden p-2 rounded-lg hover:bg-[hsl(var(--secondary))] transition"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -107,7 +113,7 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile nav */}
       {isMenuOpen && (
         <div className="md:hidden border-t border-[hsl(var(--border))] bg-[hsl(var(--background))] animate-slide-up">
           <nav className="container py-4 flex flex-col gap-2">
@@ -126,7 +132,6 @@ const Navbar = () => {
               </Link>
             ))}
 
-            {/* Mobile Buttons */}
             <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-[hsl(var(--border))]">
               {user ? (
                 <>
@@ -134,7 +139,6 @@ const Navbar = () => {
                     <User className="h-4 w-4" />
                     {displayName}
                   </span>
-
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-[hsl(var(--secondary))] rounded-lg text-left"
@@ -154,7 +158,6 @@ const Navbar = () => {
                   >
                     Sign In
                   </button>
-
                   <button
                     className="px-4 py-3 text-sm bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90 rounded-lg"
                     onClick={() => {
