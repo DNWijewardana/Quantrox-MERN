@@ -41,8 +41,10 @@ const Navbar = () => {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-primary shadow-md group-hover:shadow-lg transition-shadow">
             <Building2 className="h-5 w-5 text-[hsl(var(--primary-foreground))]" />
           </div>
-          <span className="font-display font-bold text-lg text-[hsl(var(--foreground))] hidden sm:inline">
-            Quantrox
+          <span className="font-display text-xl font-bold hidden sm:inline">
+            <span className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] bg-clip-text text-transparent">
+              Quantrox
+            </span>
           </span>
         </Link>
 
