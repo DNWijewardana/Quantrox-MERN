@@ -66,6 +66,7 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [lastSaved, setLastSaved] = useState(null);
 
   // Auth check
   useEffect(() => {
@@ -94,6 +95,8 @@ const Settings = () => {
             setIncludeWastage(data.settings.includeWastage);
           }
           if (data.settings.region) setRegion(data.settings.region);
+          if (data.settings.updatedAt)
+            setLastSaved(new Date(data.settings.updatedAt));
         }
       } catch (err) {
         toast.error("Could not load settings");
@@ -103,7 +106,7 @@ const Settings = () => {
     })();
   }, [user]);
 
-  // Save
+  // Save settings
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -116,6 +119,7 @@ const Settings = () => {
       });
       if (data.success) {
         toast.success("Settings saved!");
+        setLastSaved(new Date());
       } else {
         toast.error(data.message || "Could not save");
       }
@@ -141,6 +145,7 @@ const Settings = () => {
         );
         setIncludeWastage(data.settings.includeWastage !== false);
         setRegion(data.settings.region || "western");
+        setLastSaved(new Date());
         toast.success("Settings reset to defaults");
       } else {
         toast.error(data.message || "Could not reset");
@@ -181,6 +186,12 @@ const Settings = () => {
               Customize material rates, labour costs, and wastage factors for
               your region.
             </p>
+            {lastSaved && (
+              <p className="text-xs text-[hsl(var(--muted-foreground))] mt-2 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--success))]" />
+                Last saved: {lastSaved.toLocaleString()}
+              </p>
+            )}
           </div>
 
           <Tabs defaultValue="materials" className="space-y-6">
