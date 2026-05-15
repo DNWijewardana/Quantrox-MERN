@@ -3,50 +3,57 @@ import axios from "axios";
 const CV_SERVICE_URL =
   import.meta.env.VITE_CV_SERVICE_URL || "http://localhost:5000";
 
-// We use a separate axios instance (not axiosInstance from /lib/axios.js)
-// because this hits a DIFFERENT server than the Node backend.
+// Separate axios instance — this hits a DIFFERENT server than
+// the Node backend, so it must not carry our auth cookies
 const cvAxios = axios.create({
   baseURL: CV_SERVICE_URL,
-  timeout: 30000, // OpenCV processing can take a few seconds
+  timeout: 60000, // CPU inference can take a few seconds; allow up to 60s
 });
 
+//  GET /health
 export async function isCvServiceAlive() {
   try {
-    const { data, status } = await cvAxios.get("/health", { timeout: 2000 });
-    return status === 200 && data?.status === "ok";
+    const { data, status } = await cvAxios.get("/health", { timeout: 3000 });
+    return status === 200 && data?.ok === true && data?.model?.loaded === true;
   } catch {
     return false;
   }
 }
 
-//  Detect-lines
-//  Sends a publicly-reachable image URL to the Python
-//  service and returns an array of detected line segments.
-//
-//  Each line: { a: {x, y}, b: {x, y} }
-
-export async function detectLines(imageUrl, options = {}) {
-  const {
-    cannyLow = 50,
-    cannyHigh = 150,
-    houghThreshold = 80,
-    minLineLength = 40,
-    maxLineGap = 10,
-  } = options;
-
-  const { data } = await cvAxios.post("/detect-lines", {
-    imageUrl,
-    cannyLow,
-    cannyHigh,
-    houghThreshold,
-    minLineLength,
-    maxLineGap,
-  });
+//  POST /detect-lines
+export async function detectLines(imageUrl) {
+  const { data } = await cvAxios.post("/detect-lines", { imageUrl });
 
   if (!data?.success) {
-    throw new Error(data?.message || "Line detection failed");
+    throw new Error(data?.message || "Detection failed");
   }
 
-  // data.lines: [{ a: {x, y}, b: {x, y} }, ...]
-  return data.lines || [];
+  // The new API returns walls as [{ x1, y1, x2, y2, length }, ...]
+  // Convert to the editor's expected shape [{ a, b }, ...]
+  const walls = (data.walls || []).map((w) => ({
+    a: { x: w.x1, y: w.y1 },
+    b: { x: w.x2, y: w.y2 },
+  }));
+
+  return walls;
+}
+
+export async function detectFloorPlan(imageUrl) {
+  const { data } = await cvAxios.post("/detect-lines", { imageUrl });
+
+  if (!data?.success) {
+    throw new Error(data?.message || "Detection failed");
+  }
+
+  return {
+    walls: (data.walls || []).map((w) => ({
+      a: { x: w.x1, y: w.y1 },
+      b: { x: w.x2, y: w.y2 },
+      length: w.length,
+    })),
+    rooms: data.rooms || [],
+    validation: data.validation || null,
+    timing: data.timing_ms || null,
+    imageSize: data.image_size || null,
+  };
 }
