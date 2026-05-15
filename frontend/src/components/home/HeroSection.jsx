@@ -87,7 +87,7 @@ const HeroSection = () => {
             <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10">
               <Stat label="Sri Lankan" value="LKR" />
               <Stat label="ICTAD Standards" value="✓" />
-              <Stat label="Free" value="Open Source" />
+              <Stat label="Open Source" value="Free" />
             </div>
           </div>
 
