@@ -14,7 +14,7 @@ const VerifyEmail = () => {
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [sending, setSending] = useState(false);
-  const [verifying, setVerifying] = useState(false);
+  const [verifying, setVerifying] = useState(true);
   const inputRefs = useRef([]);
 
   // If the user isn't logged in (no cookie), bounce them to login.

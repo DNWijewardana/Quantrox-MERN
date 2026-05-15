@@ -1,0 +1,23 @@
+# =================================================================
+# Install:
+#     pip install -r requirements.txt
+#
+# IMPORTANT: If you have Python 3.13 or newer, please use a slightly
+# older Python (3.11 or 3.12) instead because torch wheels for very
+# new Python versions take a while to be released by PyTorch team.
+# =================================================================
+
+# Web framework
+Flask==3.0.3
+flask-cors==5.0.0
+requests==2.32.3
+
+# Image processing
+opencv-contrib-python==4.10.0.84
+numpy==1.26.4
+Pillow==10.4.0
+
+# Deep learning  (CPU build — small download, no CUDA needed)
+# NOTE: TorchScript .torchscript files only need 'torch'.
+#       segmentation-models-pytorch is NOT a runtime dependency.
+torch==2.4.1
